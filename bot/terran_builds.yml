@@ -33,21 +33,23 @@ Builds:
     - 22 supply
     - 23 hellion x2
     - 24 gas
-    - 28 barrackstechlab
-    - 30 stimpack
-    - 30 barracks
-    - 32 engineeringbay
+    - 26 barrackstechlab
+    - 28 stimpack
+    - 28 barracks
+    - 30 engineeringbay
     - 32 starport
+    - 32 terraninfantryweaponslevel1
     - 34 marauder x2
-    - 34 terraninfantryweaponslevel1
-    - 34 medivac
-    - 40 shieldwall
+    - 34 starportreactor
+    - 36 barracks
+    - 36 medivac x2
+    - 38 shieldwall
     - 42 supply
-    - 44 marine x4
-    - 50 factory
-    - 54 widowmine x2
-    notes:
-    - 'NOTE conditional step (runtime-only): 44 marine x4 skip_if=ling_flood'
+    - 46 marine x4
+    - 52 factory
+    - 56 widowmine x2
+    - 60 commandcenter
+    - 64 terraninfantryarmorslevel1
   TvP:
     AutoSupplyAtSupply: 0
     ConstantWorkerProductionTill: 70
@@ -58,35 +60,36 @@ Builds:
     - 19 expand
     - 20 reaper
     - 20 orbital
-    - 21 gas
-    - 22 factory
+    - 21 factory
+    - 22 gas
     - 23 supply
+    - 23 starport
     - 24 marine
-    - 24 starport
     - 25 barrackstechlab
-    - 26 starportreactor
+    - 25 starportreactor
     - 28 stimpack
-    - 30 orbital
-    - 32 bunker
-    - 34 factorytechlab
+    - 29 orbital
+    - 30 bunker
+    - 32 factorytechlab
+    - 34 engineeringbay
     - 36 supply
-    - 38 shieldwall
-    - 40 siegetank
-    - 44 engineeringbay
+    - 38 siegetank
+    - 42 shieldwall
+    - 44 barracks
     - 46 medivac x2
-    - 50 barracks x2
-    - 54 siegetank
-    - 56 expand
-    - 60 supply x2
-    - 62 terraninfantryweaponslevel1
+    - 50 siegetank
+    - 52 terraninfantryweaponslevel1
+    - 56 barracks
+    - 60 expand
+    - 64 supply x2
     - 66 barrackstechlab
-    - 70 punishergrenades
-    - 74 armory
-    - 78 vikingfighter x2
-    - 82 terraninfantryarmorslevel1
-    - 86 engineeringbay
-    - 90 orbital
-    - 96 starport
+    - 68 punishergrenades
+    - 72 armory
+    - 76 vikingfighter x2
+    - 80 terraninfantryarmorslevel1
+    - 84 engineeringbay
+    - 88 orbital
+    - 94 starport
     - 100 terraninfantryweaponslevel2
     - 102 terraninfantryarmorslevel2
     - 110 expand
@@ -101,32 +104,36 @@ Builds:
     - 19 orbital
     - 19 reaper
     - 20 expand
+    - 21 marine
     - 22 factory
+    - 23 gas
     - 24 supply
     - 24 starport
     - 24 barracksreactor
-    - 26 gas
-    - 26 medivac
-    - 28 marine
+    - 26 bunker
+    - 26 starportreactor
+    - 30 factorytechlab
     - 32 siegetank
     - 34 orbital
-    - 36 supply
-    - 38 factorytechlab
-    - 42 marine x2
-    - 46 barrackstechlab
-    - 48 barracks
-    - 50 engineeringbay
-    - 52 supply
-    - 54 stimpack
+    - 35 supply
+    - 40 engineeringbay
+    - 42 medivac
+    - 44 barracks
+    - 46 siegetank
+    - 48 barrackstechlab
+    - 50 supply
+    - 52 stimpack
+    - 54 missileturret
     - 58 siegetank
     - 62 terraninfantryweaponslevel1
-    - 66 medivac
-    - 70 shieldwall
-    - 74 starport
-    - 78 expand
-    - 82 engineeringbay
-    - 86 terraninfantryarmorslevel1
-    - 90 armory
+    - 66 supply
+    - 68 shieldwall
+    - 72 medivac
+    - 76 barracks
+    - 80 expand
+    - 84 engineeringbay
+    - 88 terraninfantryarmorslevel1
+    - 92 armory
     - 100 terraninfantryweaponslevel2
     - 110 terraninfantryarmorslevel2
     notes:

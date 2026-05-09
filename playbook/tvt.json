@@ -2,10 +2,10 @@
   "metadata": {
     "schema_version": "1.0",
     "matchup": "TvT",
-    "generated_at": "2026-05-09T05:59:00+00:00",
-    "generator": "opus-4-7-r1",
-    "source_replays": 4,
-    "notes": "0-4 in TvT with no reactions firing \u2014 the prior playbook was likely too passive and never triggered scouting responses. Pivot to a proven reaper-expand into 1-1-1 (Siege Tank + Medivac + Marine/Marauder) opening. Tanks are the answer to mirror Terran: they out-trade Marines and force the opponent to commit to bio or counter-tech. Add scouting reactions for cloaked banshee, BC rush, and mech so we don't get blindsided. Stim + Combat Shield + Tank pushes around 9:00."
+    "generated_at": "2026-05-09T06:26:57+00:00",
+    "generator": "opus-4-7-r2",
+    "source_replays": 10,
+    "notes": "1-5 with prior playbook; reactions still aren't firing (vocab may not match scouts) and enemy first attack lands ~9:57. Tightening the 1-1-1 so SiegeTech, Stim, and 2+ tanks + medivac are out before 9:00. Adding a Bunker at the natural and an earlier EBay turret to survive cloaked-banshee / drop timings even if the named reactions never fire. Cut 2nd Starport (we don't need it pre-9:00) and pulled the second Barracks earlier so we have stim-marine mass alongside tanks."
   },
   "build_order": [
     {
@@ -64,11 +64,29 @@
     },
     {
       "trigger": {
+        "supply": 21
+      },
+      "action": {
+        "kind": "produce",
+        "target": "Marine"
+      }
+    },
+    {
+      "trigger": {
         "supply": 22
       },
       "action": {
         "kind": "produce",
         "target": "Factory"
+      }
+    },
+    {
+      "trigger": {
+        "supply": 23
+      },
+      "action": {
+        "kind": "produce",
+        "target": "Refinery"
       }
     },
     {
@@ -86,16 +104,7 @@
       },
       "action": {
         "kind": "produce",
-        "target": "Refinery"
-      }
-    },
-    {
-      "trigger": {
-        "supply": 28
-      },
-      "action": {
-        "kind": "produce",
-        "target": "Marine"
+        "target": "Bunker"
       }
     },
     {
@@ -118,6 +127,15 @@
     },
     {
       "trigger": {
+        "supply": 30
+      },
+      "action": {
+        "kind": "produce",
+        "target": "FactoryTechLab"
+      }
+    },
+    {
+      "trigger": {
         "supply": 32
       },
       "action": {
@@ -136,7 +154,7 @@
     },
     {
       "trigger": {
-        "supply": 36
+        "supply": 35
       },
       "action": {
         "kind": "produce",
@@ -145,35 +163,7 @@
     },
     {
       "trigger": {
-        "supply": 38
-      },
-      "action": {
-        "kind": "produce",
-        "target": "FactoryTechLab"
-      }
-    },
-    {
-      "trigger": {
-        "on": "starport_complete"
-      },
-      "action": {
-        "kind": "produce",
-        "target": "Medivac"
-      }
-    },
-    {
-      "trigger": {
-        "supply": 42
-      },
-      "action": {
-        "kind": "produce",
-        "target": "Marine",
-        "count": 2
-      }
-    },
-    {
-      "trigger": {
-        "supply": 44
+        "on": "factory_techlab_complete"
       },
       "action": {
         "kind": "research",
@@ -182,25 +172,16 @@
     },
     {
       "trigger": {
-        "supply": 46
+        "on": "starport_complete"
       },
       "action": {
         "kind": "produce",
-        "target": "BarracksTechLab"
+        "target": "StarportReactor"
       }
     },
     {
       "trigger": {
-        "supply": 48
-      },
-      "action": {
-        "kind": "produce",
-        "target": "Barracks"
-      }
-    },
-    {
-      "trigger": {
-        "supply": 50
+        "supply": 40
       },
       "action": {
         "kind": "produce",
@@ -209,7 +190,43 @@
     },
     {
       "trigger": {
-        "supply": 52
+        "supply": 42
+      },
+      "action": {
+        "kind": "produce",
+        "target": "Medivac"
+      }
+    },
+    {
+      "trigger": {
+        "supply": 44
+      },
+      "action": {
+        "kind": "produce",
+        "target": "Barracks"
+      }
+    },
+    {
+      "trigger": {
+        "supply": 46
+      },
+      "action": {
+        "kind": "produce",
+        "target": "SiegeTank"
+      }
+    },
+    {
+      "trigger": {
+        "supply": 48
+      },
+      "action": {
+        "kind": "produce",
+        "target": "BarracksTechLab"
+      }
+    },
+    {
+      "trigger": {
+        "supply": 50
       },
       "action": {
         "kind": "produce",
@@ -218,11 +235,20 @@
     },
     {
       "trigger": {
-        "supply": 54
+        "supply": 52
       },
       "action": {
         "kind": "research",
         "target": "Stimpack"
+      }
+    },
+    {
+      "trigger": {
+        "supply": 54
+      },
+      "action": {
+        "kind": "produce",
+        "target": "MissileTurret"
       }
     },
     {
@@ -249,12 +275,12 @@
       },
       "action": {
         "kind": "produce",
-        "target": "Medivac"
+        "target": "SupplyDepot"
       }
     },
     {
       "trigger": {
-        "supply": 70
+        "supply": 68
       },
       "action": {
         "kind": "research",
@@ -263,16 +289,25 @@
     },
     {
       "trigger": {
-        "supply": 74
+        "supply": 72
       },
       "action": {
         "kind": "produce",
-        "target": "Starport"
+        "target": "Medivac"
       }
     },
     {
       "trigger": {
-        "supply": 78
+        "supply": 76
+      },
+      "action": {
+        "kind": "produce",
+        "target": "Barracks"
+      }
+    },
+    {
+      "trigger": {
+        "supply": 80
       },
       "action": {
         "kind": "expand",
@@ -281,7 +316,7 @@
     },
     {
       "trigger": {
-        "supply": 82
+        "supply": 84
       },
       "action": {
         "kind": "produce",
@@ -290,7 +325,7 @@
     },
     {
       "trigger": {
-        "supply": 86
+        "supply": 88
       },
       "action": {
         "kind": "research",
@@ -299,7 +334,7 @@
     },
     {
       "trigger": {
-        "supply": 90
+        "supply": 92
       },
       "action": {
         "kind": "produce",
@@ -334,18 +369,18 @@
     },
     "mid": {
       "Marine": 0.45,
-      "Marauder": 0.2,
-      "SiegeTank": 0.2,
-      "Medivac": 0.12,
-      "VikingFighter": 0.03
+      "Marauder": 0.15,
+      "SiegeTank": 0.25,
+      "Medivac": 0.1,
+      "VikingFighter": 0.05
     },
     "late": {
       "Marine": 0.35,
       "Marauder": 0.2,
-      "SiegeTank": 0.2,
-      "Medivac": 0.13,
-      "VikingFighter": 0.1,
-      "Ghost": 0.02
+      "SiegeTank": 0.22,
+      "Medivac": 0.12,
+      "VikingFighter": 0.08,
+      "Ghost": 0.03
     }
   },
   "macro_rules": {
@@ -359,37 +394,37 @@
       "trigger": "cloaked_banshee",
       "response": "build_turrets_and_raven",
       "priority": 3,
-      "notes": "Critical in TvT \u2014 a single uncountered banshee can end the game. Get an Engineering Bay turret at each mineral line and a Raven."
+      "notes": "Single uncountered banshee can end the game. Turrets at every mineral line + Raven."
     },
     {
       "trigger": "battlecruiser_rush",
       "response": "rush_vikings_and_marines",
       "priority": 3,
-      "notes": "Yamato kills tanks in one shot. Need Vikings and stim-marines en masse."
+      "notes": "Yamato one-shots tanks; need Viking + stim Marine mass."
     },
     {
       "trigger": "mech_opening",
       "response": "tech_to_marauder",
       "priority": 2,
-      "notes": "If they go heavy factory, lean Marauder + Medivac with siege support."
+      "notes": "Marauder + Medivac with siege support beats pure mech."
     },
     {
       "trigger": "bio_drop",
       "response": "build_turrets_and_raven",
       "priority": 2,
-      "notes": "Medivac drops in mineral lines need turrets and a defensive Marine garrison."
+      "notes": "Defensive turret coverage and a marine garrison at each base."
     },
     {
       "trigger": "proxy_rax",
       "response": "wall_off_at_natural",
       "priority": 3,
-      "notes": "Wall the natural ramp with depot+rax+factory if proxy is scouted."
+      "notes": "Wall depot+rax+factory at the natural ramp."
     },
     {
       "trigger": "mass_marine",
       "response": "siege_tank_push",
       "priority": 1,
-      "notes": "Tanks crush undefended bio. Push with siege contain."
+      "notes": "Tanks crush undefended bio; push with siege contain before stim+medivac."
     }
   ]
 }

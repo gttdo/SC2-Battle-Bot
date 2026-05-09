@@ -2,10 +2,10 @@
   "metadata": {
     "schema_version": "0.2",
     "matchup": "TvZ",
-    "generated_at": "2026-05-09T04:48:38Z",
-    "generator": "opus-4-7-r1",
-    "source_replays": 3,
-    "notes": "0/3 vs Zerg with median 11min losses suggests we lack early ling/bane defense and arrive at first push without combat shield/+1. Shifting to Reaper-Hellion FE: hellions out of factory before bio commits to crush ling pressure, then Tech Lab Stim + CombatShield + Eng Bay +1 timing around 8min, Starport Medivac, Widow Mines from second factory reactor swap. Fewer reapers, earlier safety."
+    "generated_at": "2026-05-09T06:28:02Z",
+    "generator": "opus-4-7-r2",
+    "source_replays": 8,
+    "notes": "Improved to 2-3 from 0-3 with reaper-hellion FE. Recurring 'won_at_10m' suggests our 10min stim+shield+medivac timing IS the winning push when it lands; losses come when we're late. Tightening: earlier 2nd barracks (supply 26), faster Starport with reactor for double medivac, +1 weapons in parallel, and committing 3 barracks production before 2nd factory. Goal: 2 medivacs + stim + shield + 1/0 by 9:30."
   },
   "build_order": [
     {
@@ -94,14 +94,14 @@
         "on": "factory_complete"
       },
       "action": {
-        "count": 2,
         "kind": "produce",
-        "target": "Hellion"
+        "target": "Hellion",
+        "count": 2
       }
     },
     {
       "trigger": {
-        "supply": 28
+        "supply": 26
       },
       "action": {
         "kind": "produce",
@@ -119,7 +119,7 @@
     },
     {
       "trigger": {
-        "supply": 30
+        "supply": 28
       },
       "action": {
         "kind": "produce",
@@ -128,7 +128,7 @@
     },
     {
       "trigger": {
-        "supply": 32
+        "supply": 30
       },
       "action": {
         "kind": "produce",
@@ -146,16 +146,6 @@
     },
     {
       "trigger": {
-        "supply": 34
-      },
-      "action": {
-        "count": 2,
-        "kind": "produce",
-        "target": "Marauder"
-      }
-    },
-    {
-      "trigger": {
         "on": "engineering_bay_complete"
       },
       "action": {
@@ -165,20 +155,39 @@
     },
     {
       "trigger": {
-        "on": "starport_complete"
+        "supply": 34
       },
       "action": {
         "kind": "produce",
-        "target": "Medivac"
+        "target": "Marauder",
+        "count": 2
       }
     },
     {
       "trigger": {
-        "supply": 40
+        "supply": 36
+      },
+      "action": {
+        "kind": "produce",
+        "target": "Barracks"
+      }
+    },
+    {
+      "trigger": {
+        "supply": 38
       },
       "action": {
         "kind": "research",
         "target": "CombatShield"
+      }
+    },
+    {
+      "trigger": {
+        "on": "starport_complete"
+      },
+      "action": {
+        "kind": "produce",
+        "target": "StarportReactor"
       }
     },
     {
@@ -192,18 +201,27 @@
     },
     {
       "trigger": {
-        "supply": 44
+        "on": "starport_reactor_complete"
       },
       "action": {
-        "count": 4,
         "kind": "produce",
-        "target": "Marine"
-      },
-      "skip_if": "ling_flood"
+        "target": "Medivac",
+        "count": 2
+      }
     },
     {
       "trigger": {
-        "supply": 50
+        "supply": 46
+      },
+      "action": {
+        "kind": "produce",
+        "target": "Marine",
+        "count": 4
+      }
+    },
+    {
+      "trigger": {
+        "supply": 52
       },
       "action": {
         "kind": "produce",
@@ -212,36 +230,54 @@
     },
     {
       "trigger": {
-        "supply": 54
+        "supply": 56
       },
       "action": {
-        "count": 2,
         "kind": "produce",
-        "target": "WidowMine"
+        "target": "WidowMine",
+        "count": 2
+      }
+    },
+    {
+      "trigger": {
+        "supply": 60
+      },
+      "action": {
+        "kind": "produce",
+        "target": "CommandCenter"
+      }
+    },
+    {
+      "trigger": {
+        "supply": 64
+      },
+      "action": {
+        "kind": "research",
+        "target": "TerranInfantryArmorsLevel1"
       }
     }
   ],
   "composition_targets": {
     "early": {
       "Marine": 0.5,
-      "Reaper": 0.2,
-      "Hellion": 0.3
+      "Hellion": 0.3,
+      "Reaper": 0.2
     },
     "mid": {
-      "Marine": 0.4,
-      "Marauder": 0.25,
-      "Medivac": 0.1,
-      "WidowMine": 0.15,
+      "Marine": 0.45,
+      "Marauder": 0.2,
+      "Medivac": 0.12,
+      "WidowMine": 0.13,
       "Hellion": 0.1
     },
     "late": {
-      "Marine": 0.3,
+      "Marine": 0.35,
       "Marauder": 0.2,
-      "Medivac": 0.1,
-      "SiegeTank": 0.1,
-      "Liberator": 0.1,
-      "WidowMine": 0.1,
-      "Ghost": 0.1
+      "Medivac": 0.12,
+      "SiegeTank": 0.13,
+      "WidowMine": 0.08,
+      "Liberator": 0.07,
+      "Ghost": 0.05
     }
   },
   "macro_rules": {
@@ -256,7 +292,7 @@
       "trigger": "ling_flood",
       "response": "wall_off_at_natural",
       "priority": 3,
-      "notes": "Hold marine wave, prioritize hellions and depot wall."
+      "notes": "Hellions + bunker, hold until stim."
     },
     {
       "trigger": "early_pool",
