@@ -52,6 +52,14 @@ MAP_FILE_EXT: str = "SC2Map"
 CONFIG_KEY_NAME: str = "MyBotName"
 CONFIG_KEY_RACE: str = "MyBotRace"
 
+# Maps that crash map-analyzer (the ares pathing dependency) at game start.
+# map_analyzer.MapData._compile_map raises IndexError trying to walk ramp
+# regions on these maps:
+#   LastFantasyAIE - 'list index out of range' inside MDRamp.set_regions
+# Confirmed reproducible against map-analyzer 0.2.0 + spudde123/develop.
+# Filter from the rotation rather than chase the upstream fix.
+KNOWN_BROKEN_MAPS: set[str] = {"LastFantasyAIE"}
+
 # Candidate Maps directories by OS. We pick the first one that exists and
 # has any *.SC2Map files. The user-folder paths come first because they
 # don't require admin rights to write to (handy when dropping in a fresh
@@ -187,7 +195,7 @@ def main() -> None:
         map_list = [
             p.name.replace(f".{MAP_FILE_EXT}", "")
             for p in Path(maps_dir).glob(f"*.{MAP_FILE_EXT}")
-            if p.is_file()
+            if p.is_file() and p.name.replace(f".{MAP_FILE_EXT}", "") not in KNOWN_BROKEN_MAPS
         ]
     if not map_list:
         logger.warning(
