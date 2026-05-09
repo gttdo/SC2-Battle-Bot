@@ -86,3 +86,72 @@ def test_to_observation_rejects_invalid_result():
     rec = match_observation.Recorder()
     with pytest.raises(ValueError):
         rec.to_observation("victory", 100.0, "0.2+manual")
+
+
+# ---------------------------------------------------------------------------
+# derive_critical_event_tag (pure function)
+# ---------------------------------------------------------------------------
+
+def test_derive_critical_event_win():
+    tag = match_observation.derive_critical_event_tag(
+        result="win", duration_seconds=540, first_attack_seconds=None,
+    )
+    assert tag == "won_at_9m"
+
+
+def test_derive_critical_event_early_loss_no_pressure():
+    tag = match_observation.derive_critical_event_tag(
+        result="loss", duration_seconds=300, first_attack_seconds=None,
+    )
+    assert tag == "early_loss_at_5m"
+
+
+def test_derive_critical_event_early_pressure_loss():
+    tag = match_observation.derive_critical_event_tag(
+        result="loss", duration_seconds=240, first_attack_seconds=180,
+    )
+    assert tag == "early_pressure_loss_at_4m"
+
+
+def test_derive_critical_event_mid_loss():
+    tag = match_observation.derive_critical_event_tag(
+        result="loss", duration_seconds=600, first_attack_seconds=None,
+    )
+    assert tag == "mid_loss_at_10m"
+
+
+def test_derive_critical_event_mid_loss_after_early_pressure():
+    """An attack at t=3:00 followed by a loss at t=10:00 — they pressured
+    us early, we held but then lost the second engagement. Distinct from
+    a clean mid-game macro loss."""
+    tag = match_observation.derive_critical_event_tag(
+        result="loss", duration_seconds=600, first_attack_seconds=180,
+    )
+    assert tag == "mid_loss_after_early_pressure_at_10m"
+
+
+def test_derive_critical_event_late_loss():
+    tag = match_observation.derive_critical_event_tag(
+        result="loss", duration_seconds=900, first_attack_seconds=None,
+    )
+    assert tag == "late_loss_at_15m"
+
+
+def test_derive_critical_event_late_loss_no_early_pressure_qualifier():
+    """Late losses don't get the 'after_early_pressure' qualifier even if
+    the first attack was early — by 15 minutes whether the rush hit or not
+    isn't the dominant signal anymore."""
+    tag = match_observation.derive_critical_event_tag(
+        result="loss", duration_seconds=900, first_attack_seconds=120,
+    )
+    assert tag == "late_loss_at_15m"
+
+
+def test_derive_critical_event_method_respects_existing_event():
+    """If something already set critical_event in-game, the recorder's
+    derive method should keep that value — we only fall back to the tag
+    derivation when nothing was recorded."""
+    rec = match_observation.Recorder()
+    rec.critical_event = "lost_main_to_drop_at_8m"
+    out = rec.derive_critical_event_tag(result="loss", duration_seconds=600)
+    assert out == "lost_main_to_drop_at_8m"

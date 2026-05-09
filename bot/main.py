@@ -35,6 +35,12 @@ if TYPE_CHECKING:
 PLAYBOOK_VERSION = "0.2+manual"
 PLAYBOOK_DIR = Path(__file__).resolve().parent.parent / "playbook"
 
+# First-attack detection. Tighter radius than strategy.THREAT_RADIUS (40)
+# because this asks "are they literally at our base", not "should the army
+# pull back". MIN_THREAT_UNITS=3 ignores single scouts / overlords.
+FIRST_ATTACK_RADIUS = 30.0
+MIN_THREAT_UNITS = 3
+
 
 class SC2Agent(AresBot):
     """The bot. Named SC2Agent to match the project's external branding;
@@ -131,6 +137,9 @@ class SC2Agent(AresBot):
                 if name:
                     self.match_recorder.see_enemy_structure(name, our_supply)
 
+            # Detect the first significant enemy attack on our base.
+            self._record_first_attack_if_seen()
+
     async def on_end(self, game_result: "Result") -> None:
         try:
             self._persist_observation(game_result)
@@ -204,9 +213,20 @@ class SC2Agent(AresBot):
             )
         self.match_recorder.reactions_fired = sorted(set(registry_fired) - set(prepop))
 
+        # Fill in critical_event if no in-game code already did. Coarse but
+        # consistent — gives the strategist a tag it can aggregate across
+        # matches even when richer in-game detection didn't fire.
+        duration = float(getattr(self, "time", 0.0))
+        if self.match_recorder.critical_event is None:
+            self.match_recorder.critical_event = (
+                self.match_recorder.derive_critical_event_tag(
+                    result=result_label, duration_seconds=duration,
+                )
+            )
+
         observation = self.match_recorder.to_observation(
             result=result_label,
-            duration_seconds=float(getattr(self, "time", 0.0)),
+            duration_seconds=duration,
             playbook_version=PLAYBOOK_VERSION,
         )
 
@@ -215,6 +235,64 @@ class SC2Agent(AresBot):
         opponent_memory.save(state)
         logger.info(
             f"on_end: wrote observation for {opp_id} ({self.matchup}) -> {result_label}"
+        )
+
+    def _record_first_attack_if_seen(self) -> None:
+        """Detect the first cluster of enemy combat units near our base; if
+        found and not already recorded, snapshot time + composition on the
+        match recorder. Idempotent — a recorder that already has a first
+        attack drops out cheaply."""
+        if self.match_recorder is None:
+            return
+        if self.match_recorder.first_attack_seconds is not None:
+            return  # already recorded — no-op
+
+        townhalls = list(getattr(self, "townhalls", []) or [])
+        enemy_units = getattr(self, "enemy_units", None)
+        if not townhalls or not enemy_units:
+            return
+
+        radius_sq = FIRST_ATTACK_RADIUS * FIRST_ATTACK_RADIUS
+        threatening: list = []
+        for enemy in enemy_units:
+            # Skip structures, workers, and air-only / non-attacking units —
+            # we only care about combat units that can pressure us.
+            if getattr(enemy, "is_structure", False):
+                continue
+            if getattr(enemy, "is_worker", False):
+                continue
+            if not getattr(enemy, "can_attack_ground", False):
+                continue
+            for hall in townhalls:
+                try:
+                    d2 = enemy.position.distance_to_squared(hall.position)
+                except AttributeError:
+                    ex, ey = enemy.position[0], enemy.position[1]
+                    hx, hy = hall.position[0], hall.position[1]
+                    d2 = (ex - hx) ** 2 + (ey - hy) ** 2
+                if d2 < radius_sq:
+                    threatening.append(enemy)
+                    break
+
+        if len(threatening) < MIN_THREAT_UNITS:
+            return
+
+        # Build composition snapshot — Counter of PascalCase type names.
+        from collections import Counter
+
+        comp: Counter[str] = Counter()
+        for u in threatening:
+            name = getattr(getattr(u, "type_id", None), "name", None)
+            if name:
+                comp[name] += 1
+
+        self.match_recorder.record_first_attack(
+            time_seconds=float(getattr(self, "time", 0.0)),
+            composition=dict(comp),
+        )
+        logger.info(
+            f"observation: first attack detected at t={self.time:.1f}s "
+            f"with composition={dict(comp)}"
         )
 
     @staticmethod

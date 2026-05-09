@@ -106,6 +106,22 @@ class Recorder:
                 return name, self.key_buildings_seen[name]
         return None, None
 
+    def derive_critical_event_tag(
+        self, result: str, duration_seconds: float
+    ) -> str | None:
+        """If the bot didn't manually set a critical_event, derive a coarse
+        tag from result + duration + first-attack timing. Better-than-null
+        signal for the strategist: across N matches, a tag like
+        'early_pressure_loss_at_5m' lets Claude spot rush patterns even
+        when our match recorder hasn't captured a specific event."""
+        if self.critical_event is not None:
+            return self.critical_event
+        return derive_critical_event_tag(
+            result=result,
+            duration_seconds=duration_seconds,
+            first_attack_seconds=self.first_attack_seconds,
+        )
+
     def to_observation(
         self,
         result: str,
@@ -151,3 +167,47 @@ class Recorder:
 
 def _now_iso() -> str:
     return datetime.now(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z")
+
+
+# Time buckets for the duration-based fallback tagger. Tuned so 'early' lines
+# up with rushes / cheeses, 'mid' with standard pushes, and 'late' with
+# attritional games. The strategist sees these tags as recurring loss
+# patterns when they appear in 2+ matches.
+_EARLY_END_S = 360.0   # < 6 min
+_MID_END_S = 720.0     # 6-12 min
+_EARLY_PRESSURE_THRESHOLD_S = 240.0  # < 4 min first attack = real pressure
+
+
+def derive_critical_event_tag(
+    result: str,
+    duration_seconds: float,
+    first_attack_seconds: float | None = None,
+) -> str:
+    """Pure function: coarse v0 critical-event tag from match outcome.
+
+    Result + duration bucket + (optionally) the first_attack timing produce
+    a stable string that's useful as an aggregation key when the strategist
+    reads many matches. Pure so it's unit-testable without a live game."""
+    duration = max(0.0, float(duration_seconds))
+    minutes = max(1, int(duration // 60))
+
+    if result == "win":
+        return f"won_at_{minutes}m"
+
+    early_pressure = (
+        first_attack_seconds is not None
+        and first_attack_seconds < _EARLY_PRESSURE_THRESHOLD_S
+    )
+
+    if duration < _EARLY_END_S:
+        # Lost in <6 min — almost certainly a rush we didn't survive
+        if early_pressure:
+            return f"early_pressure_loss_at_{minutes}m"
+        return f"early_loss_at_{minutes}m"
+    if duration < _MID_END_S:
+        # Lost mid-game — could be a standard push or a delayed rush
+        if early_pressure:
+            return f"mid_loss_after_early_pressure_at_{minutes}m"
+        return f"mid_loss_at_{minutes}m"
+    # Lost late-game — attrition, macro deficit, no early pressure
+    return f"late_loss_at_{minutes}m"
