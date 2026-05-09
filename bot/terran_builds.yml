@@ -1,0 +1,31 @@
+UseData: true
+BuildSelection: Cycle
+MinGamesWinrateBased: 5
+BuildChoices:
+  Terran:
+    BotName: SC2Agent
+    Cycle:
+    - TvZ
+Builds:
+  TvZ:
+    AutoSupplyAtSupply: 0
+    ConstantWorkerProductionTill: 70
+    OpeningBuildOrder:
+    - 14 supply
+    - 16 barracks
+    - 16 gas
+    - 18 barrackstechlab
+    - 19 reaper
+    - 20 orbital
+    - 20 reaper
+    - 20 stimpack
+    - 21 expand
+    - 22 gas
+    - 24 factory
+    - 24 supply
+    - 26 barracks
+    - 30 marauder x2
+    - 32 starport
+    - 34 medivac
+    - '# NOTE conditional step (runtime-only): skip_if=ling_flood'
+    - 36 marine x4

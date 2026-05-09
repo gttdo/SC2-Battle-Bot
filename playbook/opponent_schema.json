@@ -20,8 +20,8 @@
     },
     "matchup": {
       "type": "string",
-      "enum": ["PvP", "PvT", "PvZ"],
-      "description": "Matchup these priors apply to. An opponent that plays Random gets one file per race."
+      "enum": ["TvT", "TvP", "TvZ"],
+      "description": "Matchup these priors apply to. An opponent that plays Random gets one file per race they roll."
     },
     "match_count": {
       "type": "integer",
@@ -57,7 +57,7 @@
         "build_signature": {
           "type": "string",
           "pattern": "^[a-z][a-z0-9_]*$",
-          "description": "Tag for the opponent's typical opening (e.g. 'fast_4gate', 'cannon_rush', 'standard_econ', '12_pool', 'fast_third'). Vocabulary defined by the bot — unknown values must be ignored on read with a warning."
+          "description": "Tag for the opponent's typical opening (e.g. 'speedling_allin', 'fast_third_into_roach', 'muta_tech', '12_pool', 'cannon_rush'). Vocabulary defined by the bot — unknown values must be ignored on read with a warning."
         },
         "expected_first_attack_seconds": {
           "type": "number",
@@ -79,7 +79,7 @@
         },
         "expected_composition": {
           "type": "object",
-          "description": "Mid-game composition observed in past matches. Same shape as composition_map in the playbook schema. Bot uses this to bias tech targeting (e.g. rush Immortals if expected composition is heavy roach).",
+          "description": "Mid-game composition observed in past matches. Same shape as composition_map in the playbook schema. Bot uses this to bias tech targeting.",
           "patternProperties": {
             "^[A-Z][A-Za-z0-9]*$": {
               "type": "number",
@@ -116,17 +116,21 @@
 
         "their_opening": {
           "type": "object",
-          "description": "First key timings observed via scouting. Absent fields = not seen.",
+          "description": "First key timings observed via scouting. Race-agnostic.",
           "additionalProperties": false,
           "properties": {
-            "first_pylon_supply": { "type": "integer", "minimum": 0 },
-            "first_gateway_supply": { "type": "integer", "minimum": 0 },
-            "second_gateway_supply": { "type": "integer", "minimum": 0 },
-            "first_assimilator_supply": { "type": "integer", "minimum": 0 },
+            "key_buildings_seen": {
+              "type": "object",
+              "description": "Map of python-sc2 UnitTypeId -> supply at which we first scouted that structure. Examples: {SupplyDepot: 14, Barracks: 16}, {SpawningPool: 17, Extractor: 19}, {Pylon: 14, Gateway: 16}.",
+              "patternProperties": {
+                "^[A-Z][A-Za-z0-9]*$": { "type": "integer", "minimum": 0 }
+              },
+              "additionalProperties": false
+            },
             "first_expansion_seconds": { "type": ["number", "null"] },
             "first_tech_structure": {
               "type": ["string", "null"],
-              "description": "PascalCase python-sc2 UnitTypeId name, e.g. 'CyberneticsCore', 'TwilightCouncil'."
+              "description": "PascalCase python-sc2 UnitTypeId of the first key tech structure we saw (e.g. 'RoachWarren', 'BanelingNest', 'BarracksTechLab', 'TwilightCouncil')."
             },
             "first_tech_seconds": { "type": ["number", "null"] }
           }
@@ -160,7 +164,7 @@
 
         "our_critical_event": {
           "type": ["string", "null"],
-          "description": "Short tag for the pivotal moment that decided the match. Vocabulary defined by the bot (e.g. 'lost_main_army_at_3_30', 'killed_their_third_at_5_00', 'attrition_macro_loss')."
+          "description": "Short tag for the pivotal moment that decided the match. Vocabulary defined by the bot (e.g. 'lost_natural_to_roach_baneling_at_5_00', 'killed_their_third_at_7_30', 'attrition_macro_loss')."
         },
 
         "notes": {

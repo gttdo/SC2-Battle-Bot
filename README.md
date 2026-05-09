@@ -6,10 +6,22 @@ The "agent" is the system as a whole — a long-lived offline brain that learns 
 
 ## Architecture
 
-- **`bot/`** — in-game executor. Fast deterministic Python on top of [python-sc2](https://github.com/BurnySc2/python-sc2). Reads a per-matchup JSON playbook and plays. No LLM calls, no network. This is what gets zipped and uploaded as an aiarena "bot."
+- **`bot/`** — in-game executor. Built on [ares-sc2](https://github.com/AresSC2/ares-sc2) (which sits on [python-sc2](https://github.com/BurnySc2/python-sc2)). Reads a compiled `*_builds.yml` and runs ares's BuildRunner. No LLM calls, no network. This is what gets zipped and uploaded as an aiarena "bot."
 - **`strategist/`** — offline brain. Pulls match results and replays via the [aiarena Data API](https://aiarena.net/wiki/data-api/), parses replays with `sc2reader`, and uses Claude Opus to regenerate the playbook between submissions. Dev-only, never ships.
-- **`playbook/`** — JSON schema and per-matchup playbooks (`pvp.json`, `pvt.json`, `pvz.json`). The contract between the strategist and the bot. Schema enforces shape; the bot enforces vocabulary.
+- **`playbook/`** — JSON schema and per-matchup playbooks (`tvz.json`, etc.). The strategist's output format — richer than ares's YAML so the LLM has more to reason about (reactions, composition, conditional steps). [`compile.py`](playbook/compile.py) translates JSON → ares YAML. Schema enforces shape; the bot enforces vocabulary.
 - **`tests/`** — unit + sim tests for the bot and strategist.
+
+## Build/test workflow
+
+```powershell
+pip install -r requirements.txt
+
+# Validate schemas + run compiler tests
+python -m pytest tests
+
+# Compile playbook JSON to ares-sc2 YAML
+python -m playbook.compile playbook/tvz.json -o bot/terran_builds.yml --race Terran
+```
 
 ## Adaptation, in four tiers
 
@@ -26,8 +38,8 @@ The project is the **agent**. The thing that submits to and runs on aiarena is a
 
 ## Race
 
-Single-race specialist (Protoss) for v0. Random / multi-race is a possible later expansion.
+Single-race specialist (Terran) for v0. Random / multi-race is a possible later expansion.
 
 ## Status
 
-Scaffolding + v0.1 playbook schema. Not yet runnable.
+v0.2 schema + working JSON → ares YAML compiler. Reference TvZ playbook (`playbook/tvz.json`) compiles to a complete `bot/terran_builds.yml`. Bot scaffolding (main.py, ladder.py) and strategist are next.

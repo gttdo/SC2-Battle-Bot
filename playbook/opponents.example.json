@@ -1,92 +1,101 @@
 {
-  "_comment": "Synthetic example of the per-opponent priors file the bot writes to ./data/opponents/<name>_<matchup>.json. Committed as a reference for the schema; real files are runtime output and gitignored.",
-
-  "schema_version": "0.1",
-  "opponent_name": "BlinkerBot",
-  "matchup": "PvP",
-  "match_count": 8,
-  "wins": 3,
+  "schema_version": "0.2",
+  "opponent_name": "Spiny",
+  "matchup": "TvZ",
+  "match_count": 6,
+  "wins": 1,
   "losses": 5,
   "ties": 0,
-  "last_seen": "2026-05-08T12:34:00Z",
+  "last_seen": "2026-05-08T14:00:00Z",
 
   "observations": [
     {
-      "timestamp": "2026-05-08T12:34:00Z",
+      "timestamp": "2026-05-08T14:00:00Z",
       "result": "loss",
-      "map": "Site Delta LE",
-      "duration_seconds": 412,
-      "our_playbook_version": "0.1+manual",
+      "map": "Equilibrium LE",
+      "duration_seconds": 540,
+      "our_playbook_version": "0.2+manual",
       "their_opening": {
-        "first_pylon_supply": 14,
-        "first_gateway_supply": 16,
-        "second_gateway_supply": 17,
-        "first_assimilator_supply": 22,
-        "first_expansion_seconds": null,
-        "first_tech_structure": "CyberneticsCore",
-        "first_tech_seconds": 178
+        "key_buildings_seen": {
+          "Hatchery": 14,
+          "SpawningPool": 17,
+          "Extractor": 19,
+          "RoachWarren": 22
+        },
+        "first_expansion_seconds": 92,
+        "first_tech_structure": "RoachWarren",
+        "first_tech_seconds": 195
       },
       "their_first_attack": {
-        "seconds": 215,
-        "composition": { "Stalker": 4, "Zealot": 2 }
+        "seconds": 280,
+        "composition": { "Roach": 8, "Zergling": 6 }
       },
-      "our_scouted_reactions_fired": ["proxy_gate"],
-      "our_critical_event": "lost_main_army_at_3_30"
+      "our_scouted_reactions_fired": ["mass_roach"],
+      "our_critical_event": "lost_natural_to_roach_baneling_at_5_00"
     },
     {
-      "timestamp": "2026-05-07T19:12:00Z",
+      "timestamp": "2026-05-07T22:14:00Z",
       "result": "loss",
       "map": "Babylon LE",
-      "duration_seconds": 388,
-      "our_playbook_version": "0.1+manual",
+      "duration_seconds": 488,
+      "our_playbook_version": "0.2+manual",
       "their_opening": {
-        "first_pylon_supply": 14,
-        "first_gateway_supply": 16,
-        "second_gateway_supply": 18,
-        "first_assimilator_supply": 21,
-        "first_expansion_seconds": null
+        "key_buildings_seen": {
+          "Hatchery": 14,
+          "SpawningPool": 17,
+          "Extractor": 18,
+          "RoachWarren": 23
+        },
+        "first_expansion_seconds": 95,
+        "first_tech_structure": "RoachWarren",
+        "first_tech_seconds": 205
       },
       "their_first_attack": {
-        "seconds": 222,
-        "composition": { "Stalker": 5, "Zealot": 1 }
+        "seconds": 290,
+        "composition": { "Roach": 9, "Zergling": 4 }
       },
       "our_scouted_reactions_fired": [],
-      "our_critical_event": "lost_main_army_at_3_42"
+      "our_critical_event": "engaged_roach_ball_below_critical_mass"
     },
     {
-      "timestamp": "2026-05-06T03:01:00Z",
+      "timestamp": "2026-05-06T11:42:00Z",
       "result": "win",
-      "map": "Site Delta LE",
-      "duration_seconds": 624,
-      "our_playbook_version": "0.1+manual",
+      "map": "Equilibrium LE",
+      "duration_seconds": 762,
+      "our_playbook_version": "0.2+manual",
       "their_opening": {
-        "first_pylon_supply": 14,
-        "first_gateway_supply": 16,
-        "second_gateway_supply": 17,
-        "first_assimilator_supply": 22
+        "key_buildings_seen": {
+          "Hatchery": 14,
+          "SpawningPool": 17,
+          "Extractor": 19,
+          "RoachWarren": 22
+        },
+        "first_expansion_seconds": 90
       },
       "their_first_attack": {
-        "seconds": 218,
-        "composition": { "Stalker": 4, "Zealot": 2 }
+        "seconds": 285,
+        "composition": { "Roach": 7, "Zergling": 8 }
       },
-      "our_scouted_reactions_fired": ["proxy_gate"],
-      "our_critical_event": "killed_their_pylon_wall_at_3_25"
+      "our_scouted_reactions_fired": ["mass_roach"],
+      "our_critical_event": "killed_their_third_at_7_30"
     }
   ],
 
   "derived": {
-    "confidence": 0.72,
-    "build_signature": "fast_4gate",
-    "expected_first_attack_seconds": 218,
-    "expected_expansion_seconds": null,
-    "prepop_reactions": ["proxy_gate"],
+    "confidence": 0.65,
+    "build_signature": "fast_third_into_roach",
+    "expected_first_attack_seconds": 285,
+    "expected_expansion_seconds": 92,
+    "prepop_reactions": ["mass_roach"],
     "expected_composition": {
-      "Stalker": 0.7,
-      "Zealot": 0.3
+      "Roach": 0.5,
+      "Zergling": 0.3,
+      "Hydralisk": 0.2
     },
     "loss_patterns": [
-      "engaged_below_critical_mass",
-      "no_shield_battery_at_natural"
+      "engaged_roach_ball_below_critical_mass",
+      "no_widow_mines_at_natural",
+      "third_base_too_late"
     ]
   }
 }

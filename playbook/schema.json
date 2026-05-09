@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/gttdo/SC2-Battle-Bot/playbook/schema.json",
-  "title": "SC2 Battle Bot Playbook",
+  "title": "SC2 Agent Playbook",
   "description": "Per-matchup playbook consumed by the in-game bot. Generated offline by the strategist (Opus) from aiarena replays. SC2 type names follow python-sc2's UnitTypeId / UpgradeId enum spelling (PascalCase).",
   "type": "object",
   "additionalProperties": false,
@@ -19,8 +19,8 @@
         },
         "matchup": {
           "type": "string",
-          "enum": ["PvP", "PvT", "PvZ"],
-          "description": "Which matchup this playbook applies to. The bot loads the file matching self.enemy_race at game start."
+          "enum": ["TvT", "TvP", "TvZ"],
+          "description": "Which matchup this playbook applies to. The bot loads the file matching self.enemy_race at game start. Terran specialist for v0; Protoss/Zerg matchups would extend the enum."
         },
         "generated_at": {
           "type": "string",
@@ -65,25 +65,25 @@
       "type": "object",
       "description": "Numeric rules that drive macro decisions outside of the scripted build order.",
       "additionalProperties": false,
-      "required": ["probe_cap", "gas_workers_per_geyser", "supply_buffer_pct", "max_bases"],
+      "required": ["worker_cap", "gas_workers_per_geyser", "supply_buffer_pct", "max_bases"],
       "properties": {
-        "probe_cap": {
+        "worker_cap": {
           "type": "integer",
           "minimum": 16,
           "maximum": 90,
-          "description": "Hard cap on total probes across all bases."
+          "description": "Hard cap on total workers (Probes / SCVs / Drones) across all bases."
         },
         "gas_workers_per_geyser": {
           "type": "integer",
           "minimum": 0,
           "maximum": 3,
-          "description": "Probes assigned to each Assimilator. 3 = full saturation, lower values starve gas to favor mineral-heavy comps."
+          "description": "Workers assigned to each gas structure (Assimilator / Refinery / Extractor). 3 = full saturation; lower starves gas to favor mineral-heavy comps."
         },
         "supply_buffer_pct": {
           "type": "number",
           "minimum": 0.0,
           "maximum": 0.5,
-          "description": "Fraction of supply cap to keep as buffer before queuing the next Pylon."
+          "description": "Fraction of supply cap to keep as buffer before queuing the next supply structure."
         },
         "expand_at_supply": {
           "type": "integer",
@@ -95,7 +95,7 @@
           "type": "integer",
           "minimum": 1,
           "maximum": 6,
-          "description": "Upper bound on simultaneously-active Nexuses."
+          "description": "Upper bound on simultaneously-active bases (Nexuses / Command Centers / Hatcheries)."
         }
       }
     },
@@ -141,7 +141,7 @@
           "properties": {
             "on": {
               "type": "string",
-              "description": "Fire when a named in-game event occurs. Vocabulary defined by the bot (e.g. 'cybernetics_core_complete', 'first_warpgate_finished').",
+              "description": "Fire when a named in-game event occurs. Vocabulary defined by the bot (e.g. 'barracks_complete', 'factory_complete').",
               "pattern": "^[a-z][a-z0-9_]*$"
             }
           }
@@ -158,18 +158,18 @@
         "kind": {
           "type": "string",
           "enum": ["produce", "research", "expand", "chrono"],
-          "description": "produce = build a structure or train a unit (bot dispatches by target type). research = upgrade. expand = take the next base (target should be Nexus). chrono = chrono-boost the named building/upgrade."
+          "description": "produce = build a structure, train a unit, OR upgrade an existing structure (e.g. CommandCenter -> OrbitalCommand). research = upgrade. expand = take the next base (target should be the race's town hall). chrono = chrono-boost target (Protoss only)."
         },
         "target": {
           "type": "string",
-          "description": "python-sc2 UnitTypeId or UpgradeId name (PascalCase). Examples: Pylon, Gateway, CyberneticsCore, Stalker, Probe, Nexus, WarpGate, Charge, Blink.",
+          "description": "python-sc2 UnitTypeId or UpgradeId name (PascalCase). Examples: SupplyDepot, Barracks, Refinery, Marine, Marauder, Reaper, Medivac, OrbitalCommand, CommandCenter, Stimpack, CombatShield.",
           "pattern": "^[A-Z][A-Za-z0-9]*$"
         },
         "count": {
           "type": "integer",
           "minimum": 1,
           "default": 1,
-          "description": "How many instances of target to produce at this step. Ignored for research/chrono."
+          "description": "How many instances of target to produce at this step. Ignored for research / chrono / expand."
         }
       }
     },
@@ -184,7 +184,7 @@
         "chrono": {
           "type": "boolean",
           "default": false,
-          "description": "If true, chrono-boost this production/research as soon as energy is available. Shorthand for a separate chrono action."
+          "description": "Protoss-only shorthand: chrono-boost the producer of this step. Ignored for non-Protoss races."
         },
         "only_if": {
           "type": "string",
@@ -220,12 +220,12 @@
       "properties": {
         "trigger": {
           "type": "string",
-          "description": "Name of a scouted-pattern detector defined by the bot (e.g. 'proxy_gate', 'mass_roach', 'mutalisks'). Snake_case.",
+          "description": "Name of a scouted-pattern detector defined by the bot (e.g. 'ling_flood', 'mass_roach', 'mutas', 'nydus'). Snake_case.",
           "pattern": "^[a-z][a-z0-9_]*$"
         },
         "response": {
           "type": "string",
-          "description": "Name of a response handler defined by the bot (e.g. 'early_shield_battery', 'tech_to_immortal'). Snake_case.",
+          "description": "Name of a response handler defined by the bot (e.g. 'wall_off_at_natural', 'tech_to_marauder', 'thor_or_cyclone'). Snake_case.",
           "pattern": "^[a-z][a-z0-9_]*$"
         },
         "priority": {
