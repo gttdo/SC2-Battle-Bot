@@ -29,12 +29,16 @@ if TYPE_CHECKING:
 EARLY_END_SUPPLY = 50
 MID_END_SUPPLY = 120
 
-# Army state-machine thresholds (combat-unit supply). v0 is intentionally
-# trigger-happy: 5 supply (~3 marines or 1 marauder + 1 marine + 1 reaper)
-# is enough to push. Real strategy scales this up; v0 prioritizes the bot
-# actually doing something visible over winning. Tune as production scales.
-ATTACK_SUPPLY = 5
-DEFEND_SUPPLY = 2
+# Army state-machine thresholds (combat-unit supply). With home-defense
+# wired in (units recall to threats), we can be patient about pushing —
+# 25 supply is ~12 marines + 4 marauders + medivac, a real first push.
+ATTACK_SUPPLY = 25
+DEFEND_SUPPLY = 5
+
+# How close an enemy combat unit must be to one of our townhalls before
+# we treat it as a threat and recall the army to defend. Generous radius
+# so units start moving back BEFORE the enemy is shooting our buildings.
+THREAT_RADIUS = 40.0
 
 # How often (in game-seconds) to emit a strategy status log line. Avoids
 # spamming once-per-step but gives us enough signal to diagnose army flow.
@@ -148,6 +152,43 @@ def hold_position(bot: "AresBot") -> "Point2":
     return bot.start_location
 
 
+def find_threat(bot: "AresBot") -> "Point2 | None":
+    """Return the position of the nearest enemy combat unit threatening one
+    of our townhalls, or None if no threat. 'Threat' = an enemy unit that
+    isn't a structure and can attack ground, within THREAT_RADIUS of any
+    townhall. We also include observed enemy units recently in fog of war,
+    via ares's enemy_units (which includes memory units)."""
+    townhalls = list(getattr(bot, "townhalls", []) or [])
+    enemy_units = getattr(bot, "enemy_units", None)
+    if not townhalls or not enemy_units:
+        return None
+
+    nearest_pos = None
+    nearest_d2 = THREAT_RADIUS * THREAT_RADIUS
+    for enemy in enemy_units:
+        # Skip non-combat (overlords, larvae, eggs etc). Workers count as
+        # combat for v0: a worker harassing our base IS a threat.
+        if getattr(enemy, "is_structure", False):
+            continue
+        if not getattr(enemy, "can_attack_ground", False) and not getattr(
+            enemy, "is_worker", False
+        ):
+            continue
+        for hall in townhalls:
+            try:
+                d2 = enemy.position.distance_to_squared(hall.position)
+            except AttributeError:
+                # distance_to_squared isn't always available; fall back
+                ex, ey = enemy.position[0], enemy.position[1]
+                hx, hy = hall.position[0], hall.position[1]
+                d2 = (ex - hx) ** 2 + (ey - hy) ** 2
+            if d2 < nearest_d2:
+                nearest_d2 = d2
+                nearest_pos = enemy.position
+                break  # this enemy threatens; move to next enemy
+    return nearest_pos
+
+
 def update(bot: "AresBot", playbook: dict[str, Any] | None) -> None:
     """Per-step driver. Registers SpawnController, ProductionController, and
     a single AMoveGroup behavior based on current state. Idempotent — ares
@@ -233,11 +274,23 @@ def update(bot: "AresBot", playbook: dict[str, Any] | None) -> None:
     except Exception:  # pragma: no cover — never crash the bot from strategy
         logger.exception("strategy: macro behavior register failed")
 
-    # Army control: hold or attack as a single group.
+    # Army control: 3-state decision — DEFEND beats ATTACK beats HOLD.
+    # Defense always wins: if anything threatens our bases, the entire army
+    # collapses to that point regardless of attack threshold. Without this
+    # the bot pushed all-in and lost its base to a counter-attack.
     units = army_units(bot)
     a_supply = army_supply(units)
-    attacking = a_supply >= ATTACK_SUPPLY
-    target = attack_target(bot) if attacking else hold_position(bot)
+
+    threat_pos = find_threat(bot)
+    if threat_pos is not None:
+        state = "DEFEND"
+        target = threat_pos
+    elif a_supply >= ATTACK_SUPPLY:
+        state = "ATTACK"
+        target = attack_target(bot)
+    else:
+        state = "HOLD"
+        target = hold_position(bot)
 
     if units:
         try:
@@ -254,7 +307,7 @@ def update(bot: "AresBot", playbook: dict[str, Any] | None) -> None:
             logger.exception("strategy: AMoveGroup register failed")
 
     # Periodic status log so we can diagnose without watching every frame.
-    _log_status_periodically(bot, phase, a_supply, attacking, target, len(units))
+    _log_status_periodically(bot, phase, a_supply, state, target, len(units))
     _log_production_diagnostics(bot)
 
 
@@ -262,7 +315,7 @@ def _log_status_periodically(
     bot: "AresBot",
     phase: str,
     a_supply: int,
-    attacking: bool,
+    state: str,
     target: "Point2",
     unit_count: int,
 ) -> None:
@@ -272,7 +325,6 @@ def _log_status_periodically(
     if now - last < LOG_INTERVAL_SECONDS:
         return
     bot._last_strategy_log_time = now  # type: ignore[attr-defined]
-    state = "ATTACK" if attacking else "HOLD"
     target_str = (
         f"({target.x:.0f},{target.y:.0f})" if hasattr(target, "x") else str(target)
     )
