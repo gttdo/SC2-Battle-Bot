@@ -47,8 +47,12 @@ CONFIG_KEY_RACE: str = "MyBotRace"
 # aiarena map pack).
 plt = platform.system()
 if plt == "Windows":
+    # OneDrive often hijacks Documents on modern Windows; check those paths
+    # first so we don't hit "no maps" when files are sitting in OneDrive.
     MAPS_CANDIDATES: list[str] = [
-        path.expandvars(r"%USERPROFILE%\Documents\StarCraft II\Maps"),
+        path.expandvars(r"%OneDrive%\Documents\StarCraft II\Maps"),
+        path.expanduser(r"~\OneDrive\Documents\StarCraft II\Maps"),
+        path.expanduser(r"~\Documents\StarCraft II\Maps"),
         r"C:\Program Files (x86)\StarCraft II\Maps",
         r"C:\Program Files\StarCraft II\Maps",
     ]
@@ -107,9 +111,18 @@ def main() -> None:
         return
 
     # Local game: pick a random map from whichever Maps dir actually has
-    # files. If none have any, fall back to a recent ladder map list so the
-    # error from python-sc2 is more legible than "no maps".
+    # files. If python-sc2's hardcoded SC2 install/Maps path is empty (e.g.
+    # because OneDrive captured the user's Documents folder), monkey-patch
+    # sc2.paths.Paths.MAPS so maps.get(name) finds files where they actually
+    # live. Saves the user from needing admin rights to write into Program
+    # Files.
     maps_dir = _find_maps_dir()
+    if maps_dir:
+        from sc2.paths import Paths as _SC2Paths
+        _ = _SC2Paths.BASE  # force lazy __setup so our override isn't reset
+        _SC2Paths.MAPS = Path(maps_dir)
+        logger.info(f"using maps from {maps_dir}")
+
     map_list: List[str] = []
     if maps_dir:
         map_list = [
