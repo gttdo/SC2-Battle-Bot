@@ -9,7 +9,7 @@ BuildChoices:
   Terran:
     BotName: SC2Agent_vTerran
     Cycle:
-    - TvZ
+    - TvT
   Zerg:
     BotName: SC2Agent_vZerg
     Cycle:
@@ -91,3 +91,42 @@ Builds:
     - 102 terraninfantryarmorslevel2
     - 110 expand
     - 120 ghostacademy
+  TvT:
+    AutoSupplyAtSupply: 0
+    ConstantWorkerProductionTill: 66
+    OpeningBuildOrder:
+    - 14 supply
+    - 16 barracks
+    - 16 gas
+    - 19 orbital
+    - 19 reaper
+    - 20 expand
+    - 22 factory
+    - 24 supply
+    - 24 starport
+    - 24 barracksreactor
+    - 26 gas
+    - 26 medivac
+    - 28 marine
+    - 32 siegetank
+    - 34 orbital
+    - 36 supply
+    - 38 factorytechlab
+    - 42 marine x2
+    - 44 siegetech
+    - 46 barrackstechlab
+    - 48 barracks
+    - 50 engineeringbay
+    - 52 supply
+    - 54 stimpack
+    - 58 siegetank
+    - 62 terraninfantryweaponslevel1
+    - 66 medivac
+    - 70 shieldwall
+    - 74 starport
+    - 78 expand
+    - 82 engineeringbay
+    - 86 terraninfantryarmorslevel1
+    - 90 armory
+    - 100 terraninfantryweaponslevel2
+    - 110 terraninfantryarmorslevel2

@@ -1,0 +1,395 @@
+{
+  "metadata": {
+    "schema_version": "1.0",
+    "matchup": "TvT",
+    "generated_at": "2026-05-09T05:59:00+00:00",
+    "generator": "opus-4-7-r1",
+    "source_replays": 4,
+    "notes": "0-4 in TvT with no reactions firing \u2014 the prior playbook was likely too passive and never triggered scouting responses. Pivot to a proven reaper-expand into 1-1-1 (Siege Tank + Medivac + Marine/Marauder) opening. Tanks are the answer to mirror Terran: they out-trade Marines and force the opponent to commit to bio or counter-tech. Add scouting reactions for cloaked banshee, BC rush, and mech so we don't get blindsided. Stim + Combat Shield + Tank pushes around 9:00."
+  },
+  "build_order": [
+    {
+      "trigger": {
+        "supply": 14
+      },
+      "action": {
+        "kind": "produce",
+        "target": "SupplyDepot"
+      }
+    },
+    {
+      "trigger": {
+        "supply": 16
+      },
+      "action": {
+        "kind": "produce",
+        "target": "Barracks"
+      }
+    },
+    {
+      "trigger": {
+        "supply": 16
+      },
+      "action": {
+        "kind": "produce",
+        "target": "Refinery"
+      }
+    },
+    {
+      "trigger": {
+        "supply": 19
+      },
+      "action": {
+        "kind": "produce",
+        "target": "OrbitalCommand"
+      }
+    },
+    {
+      "trigger": {
+        "supply": 19
+      },
+      "action": {
+        "kind": "produce",
+        "target": "Reaper"
+      }
+    },
+    {
+      "trigger": {
+        "supply": 20
+      },
+      "action": {
+        "kind": "expand",
+        "target": "CommandCenter"
+      }
+    },
+    {
+      "trigger": {
+        "supply": 22
+      },
+      "action": {
+        "kind": "produce",
+        "target": "Factory"
+      }
+    },
+    {
+      "trigger": {
+        "supply": 24
+      },
+      "action": {
+        "kind": "produce",
+        "target": "SupplyDepot"
+      }
+    },
+    {
+      "trigger": {
+        "supply": 26
+      },
+      "action": {
+        "kind": "produce",
+        "target": "Refinery"
+      }
+    },
+    {
+      "trigger": {
+        "supply": 28
+      },
+      "action": {
+        "kind": "produce",
+        "target": "Marine"
+      }
+    },
+    {
+      "trigger": {
+        "on": "factory_complete"
+      },
+      "action": {
+        "kind": "produce",
+        "target": "Starport"
+      }
+    },
+    {
+      "trigger": {
+        "on": "factory_complete"
+      },
+      "action": {
+        "kind": "produce",
+        "target": "BarracksReactor"
+      }
+    },
+    {
+      "trigger": {
+        "supply": 32
+      },
+      "action": {
+        "kind": "produce",
+        "target": "SiegeTank"
+      }
+    },
+    {
+      "trigger": {
+        "supply": 34
+      },
+      "action": {
+        "kind": "produce",
+        "target": "OrbitalCommand"
+      }
+    },
+    {
+      "trigger": {
+        "supply": 36
+      },
+      "action": {
+        "kind": "produce",
+        "target": "SupplyDepot"
+      }
+    },
+    {
+      "trigger": {
+        "supply": 38
+      },
+      "action": {
+        "kind": "produce",
+        "target": "FactoryTechLab"
+      }
+    },
+    {
+      "trigger": {
+        "on": "starport_complete"
+      },
+      "action": {
+        "kind": "produce",
+        "target": "Medivac"
+      }
+    },
+    {
+      "trigger": {
+        "supply": 42
+      },
+      "action": {
+        "kind": "produce",
+        "target": "Marine",
+        "count": 2
+      }
+    },
+    {
+      "trigger": {
+        "supply": 44
+      },
+      "action": {
+        "kind": "research",
+        "target": "SiegeTech"
+      }
+    },
+    {
+      "trigger": {
+        "supply": 46
+      },
+      "action": {
+        "kind": "produce",
+        "target": "BarracksTechLab"
+      }
+    },
+    {
+      "trigger": {
+        "supply": 48
+      },
+      "action": {
+        "kind": "produce",
+        "target": "Barracks"
+      }
+    },
+    {
+      "trigger": {
+        "supply": 50
+      },
+      "action": {
+        "kind": "produce",
+        "target": "EngineeringBay"
+      }
+    },
+    {
+      "trigger": {
+        "supply": 52
+      },
+      "action": {
+        "kind": "produce",
+        "target": "SupplyDepot"
+      }
+    },
+    {
+      "trigger": {
+        "supply": 54
+      },
+      "action": {
+        "kind": "research",
+        "target": "Stimpack"
+      }
+    },
+    {
+      "trigger": {
+        "supply": 58
+      },
+      "action": {
+        "kind": "produce",
+        "target": "SiegeTank"
+      }
+    },
+    {
+      "trigger": {
+        "supply": 62
+      },
+      "action": {
+        "kind": "research",
+        "target": "TerranInfantryWeaponsLevel1"
+      }
+    },
+    {
+      "trigger": {
+        "supply": 66
+      },
+      "action": {
+        "kind": "produce",
+        "target": "Medivac"
+      }
+    },
+    {
+      "trigger": {
+        "supply": 70
+      },
+      "action": {
+        "kind": "research",
+        "target": "ShieldWall"
+      }
+    },
+    {
+      "trigger": {
+        "supply": 74
+      },
+      "action": {
+        "kind": "produce",
+        "target": "Starport"
+      }
+    },
+    {
+      "trigger": {
+        "supply": 78
+      },
+      "action": {
+        "kind": "expand",
+        "target": "CommandCenter"
+      }
+    },
+    {
+      "trigger": {
+        "supply": 82
+      },
+      "action": {
+        "kind": "produce",
+        "target": "EngineeringBay"
+      }
+    },
+    {
+      "trigger": {
+        "supply": 86
+      },
+      "action": {
+        "kind": "research",
+        "target": "TerranInfantryArmorsLevel1"
+      }
+    },
+    {
+      "trigger": {
+        "supply": 90
+      },
+      "action": {
+        "kind": "produce",
+        "target": "Armory"
+      }
+    },
+    {
+      "trigger": {
+        "supply": 100
+      },
+      "action": {
+        "kind": "research",
+        "target": "TerranInfantryWeaponsLevel2"
+      }
+    },
+    {
+      "trigger": {
+        "supply": 110
+      },
+      "action": {
+        "kind": "research",
+        "target": "TerranInfantryArmorsLevel2"
+      }
+    }
+  ],
+  "composition_targets": {
+    "early": {
+      "Marine": 0.55,
+      "Reaper": 0.1,
+      "SiegeTank": 0.25,
+      "Medivac": 0.1
+    },
+    "mid": {
+      "Marine": 0.45,
+      "Marauder": 0.2,
+      "SiegeTank": 0.2,
+      "Medivac": 0.12,
+      "VikingFighter": 0.03
+    },
+    "late": {
+      "Marine": 0.35,
+      "Marauder": 0.2,
+      "SiegeTank": 0.2,
+      "Medivac": 0.13,
+      "VikingFighter": 0.1,
+      "Ghost": 0.02
+    }
+  },
+  "macro_rules": {
+    "worker_cap": 66,
+    "gas_workers_per_geyser": 3,
+    "supply_buffer_pct": 0.08,
+    "max_bases": 3
+  },
+  "reactions": [
+    {
+      "trigger": "cloaked_banshee",
+      "response": "build_turrets_and_raven",
+      "priority": 3,
+      "notes": "Critical in TvT \u2014 a single uncountered banshee can end the game. Get an Engineering Bay turret at each mineral line and a Raven."
+    },
+    {
+      "trigger": "battlecruiser_rush",
+      "response": "rush_vikings_and_marines",
+      "priority": 3,
+      "notes": "Yamato kills tanks in one shot. Need Vikings and stim-marines en masse."
+    },
+    {
+      "trigger": "mech_opening",
+      "response": "tech_to_marauder",
+      "priority": 2,
+      "notes": "If they go heavy factory, lean Marauder + Medivac with siege support."
+    },
+    {
+      "trigger": "bio_drop",
+      "response": "build_turrets_and_raven",
+      "priority": 2,
+      "notes": "Medivac drops in mineral lines need turrets and a defensive Marine garrison."
+    },
+    {
+      "trigger": "proxy_rax",
+      "response": "wall_off_at_natural",
+      "priority": 3,
+      "notes": "Wall the natural ramp with depot+rax+factory if proxy is scouted."
+    },
+    {
+      "trigger": "mass_marine",
+      "response": "siege_tank_push",
+      "priority": 1,
+      "notes": "Tanks crush undefended bio. Push with siege contain."
+    }
+  ]
+}
