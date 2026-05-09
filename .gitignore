@@ -36,3 +36,6 @@ strategist/output/replays/
 
 # Submission ZIPs
 *.zip
+
+# Claude Code project config (memory, settings, transcripts — never publish)
+.claude/
