@@ -165,18 +165,62 @@ def update(bot: "AresBot", playbook: dict[str, Any] | None) -> None:
     if not ares_comp:
         return
 
-    # Continuous unit production toward target composition.
-    # `freeflow_mode=True` is intentional for v0: SpawnController's proportion
-    # mode breaks out of the queue loop the moment it can't afford the next
-    # priority unit. With a gas-cost unit (Reaper, Marauder) high in the
-    # priority list and sub-50 gas income, that means cheap Marines NEVER
-    # queue from idle Barracks even when sitting on 4000+ minerals. Freeflow
-    # spends resources on whatever is buildable, ignoring proportions —
-    # exactly what a v0 bot needs while production scales.
+    # Macro behaviors. ares's BuildRunner stops auto-supplying and stops
+    # producing workers the moment its scripted opening completes — after
+    # that, every part of macro is the bot's job. We wire ares's macro
+    # behaviors directly so production keeps flowing post-opening.
+    #
+    # `freeflow_mode=True` on SpawnController is intentional: its proportion
+    # mode `break`s the queue loop the moment it can't afford the next
+    # priority unit. With Reaper/Marauder high in priority and gas constrained,
+    # that means cheap Marines don't queue from idle Barracks even when we
+    # have 1000+ minerals. Freeflow spends what we have — strategist will
+    # eventually drive smarter proportions.
     try:
-        from ares.behaviors.macro.spawn_controller import SpawnController
+        from ares.behaviors.macro.auto_supply import AutoSupply
+        from ares.behaviors.macro.build_workers import BuildWorkers
+        from ares.behaviors.macro.expansion_controller import ExpansionController
+        from ares.behaviors.macro.gas_building_controller import GasBuildingController
+        from ares.behaviors.macro.mining import Mining
         from ares.behaviors.macro.production_controller import ProductionController
+        from ares.behaviors.macro.spawn_controller import SpawnController
+    except Exception:  # pragma: no cover
+        logger.exception("strategy: failed to import ares macro behaviors")
+        return
 
+    macro = playbook.get("macro_rules", {})
+    worker_cap = int(macro.get("worker_cap", 70))
+    max_bases = int(macro.get("max_bases", 3))
+
+    try:
+        # Worker distribution: long-distance mining, gas saturation,
+        # threatened-worker fleeing. Cheapest fix for the 13-14 idle SCVs
+        # we saw mid-game when our main saturated.
+        bot.register_behavior(Mining())
+
+        # Keep the SCV count climbing toward worker_cap. ares stops doing
+        # this after the opening, which is why we drained to 1 worker.
+        bot.register_behavior(BuildWorkers(to_count=worker_cap))
+
+        # Auto-build depots so we don't supply-block. AutoSupply checks
+        # supply_left vs supply build time and queues a depot when the gap
+        # is small. This was the original "supply=94/94" problem.
+        bot.register_behavior(AutoSupply(bot.start_location))
+
+        # Take a third / fourth base. Without this we run out of minerals
+        # mid-fight (saw 14k collected and still drained on attrition).
+        bot.register_behavior(
+            ExpansionController(to_count=max_bases, max_pending=1)
+        )
+
+        # Two refineries per active base — gives us enough gas for sustained
+        # Marauder / Medivac / tech production.
+        n_townhalls = max(1, len(bot.townhalls))
+        bot.register_behavior(
+            GasBuildingController(to_count=n_townhalls * 2)
+        )
+
+        # Continuous army production from the playbook's composition_targets.
         bot.register_behavior(
             SpawnController(army_composition_dict=ares_comp, freeflow_mode=True)
         )
@@ -187,7 +231,7 @@ def update(bot: "AresBot", playbook: dict[str, Any] | None) -> None:
             )
         )
     except Exception:  # pragma: no cover — never crash the bot from strategy
-        logger.exception("strategy: SpawnController/ProductionController register failed")
+        logger.exception("strategy: macro behavior register failed")
 
     # Army control: hold or attack as a single group.
     units = army_units(bot)
