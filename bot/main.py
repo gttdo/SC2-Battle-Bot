@@ -19,12 +19,14 @@ match_observation) are testable on their own.
 
 from __future__ import annotations
 
+import json
 import logging
-from typing import TYPE_CHECKING, Optional
+from pathlib import Path
+from typing import TYPE_CHECKING, Any, Optional
 
 from ares import AresBot
 
-from bot import match_observation, opponent_memory, reactions
+from bot import match_observation, opponent_memory, reactions, strategy
 
 if TYPE_CHECKING:
     from sc2.data import Result
@@ -33,6 +35,7 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 PLAYBOOK_VERSION = "0.2+manual"
+PLAYBOOK_DIR = Path(__file__).resolve().parent.parent / "playbook"
 
 
 class SC2Agent(AresBot):
@@ -46,6 +49,10 @@ class SC2Agent(AresBot):
         self.opponent_priors: Optional[dict] = None
         self.match_recorder: Optional[match_observation.Recorder] = None
         self.reactions_registry: Optional[reactions.Registry] = None
+        # Loaded playbook JSON (composition_targets, macro_rules, reactions).
+        # Strategy module reads composition_targets each step to drive
+        # continuous production after the BuildRunner's opening completes.
+        self.playbook: Optional[dict[str, Any]] = None
 
     # ------------------------------------------------------------------
     # Lifecycle
@@ -64,6 +71,16 @@ class SC2Agent(AresBot):
             n = self.opponent_priors.get("match_count", 0)
             conf = self.opponent_priors.get("derived", {}).get("confidence", 0.0)
             logger.info("priors loaded: %d prior matches, confidence=%.2f", n, conf)
+
+        # ---- Load matchup playbook (drives strategy.update each step) ---
+        self.playbook = self._load_playbook(self.matchup)
+        if self.playbook:
+            logger.info(
+                "playbook loaded: %s (%d build steps, %d reactions)",
+                self.matchup,
+                len(self.playbook.get("build_order", [])),
+                len(self.playbook.get("reactions", [])),
+            )
 
         # ---- Initialize match recorder ---------------------------------
         self.match_recorder = match_observation.Recorder(
@@ -102,6 +119,11 @@ class SC2Agent(AresBot):
 
         if self.reactions_registry is not None:
             await self.reactions_registry.update()
+
+        # Drive continuous production + army control once ares's BuildRunner
+        # has executed our scripted opening. Without this, the bot builds
+        # the opening then sits idle for the rest of the match.
+        strategy.update(self, self.playbook)
 
         # Record first sightings of enemy structures. We sweep what's currently
         # in vision each step; the recorder is idempotent on already-seen names.
@@ -200,6 +222,30 @@ class SC2Agent(AresBot):
             "on_end: wrote observation for %s (%s) -> %s",
             opp_id, self.matchup, result_label,
         )
+
+    @staticmethod
+    def _load_playbook(matchup: str) -> Optional[dict[str, Any]]:
+        """Load the playbook JSON for the given matchup. Returns None if
+        the file is missing or unreadable. The strategy module is a no-op
+        when playbook is None, so a missing file degrades gracefully to
+        'execute the opening from terran_builds.yml then sit'."""
+        path = PLAYBOOK_DIR / f"{matchup.lower()}.json"
+        if not path.is_file():
+            # Fallback: pick any *.json under playbook/ that isn't a schema/example.
+            for candidate in PLAYBOOK_DIR.glob("*.json"):
+                stem = candidate.stem
+                if stem.endswith("_schema") or stem.endswith(".example"):
+                    continue
+                if stem == "schema" or stem == "opponent_schema" or "example" in stem:
+                    continue
+                path = candidate
+                break
+        try:
+            with path.open(encoding="utf-8") as f:
+                return json.load(f)
+        except (OSError, json.JSONDecodeError) as e:
+            logger.warning("playbook: could not load %s: %s", path, e)
+            return None
 
     @staticmethod
     def _result_label(game_result: "Result") -> str:
