@@ -1,0 +1,243 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/gttdo/SC2-Battle-Bot/playbook/schema.json",
+  "title": "SC2 Battle Bot Playbook",
+  "description": "Per-matchup playbook consumed by the in-game bot. Generated offline by the strategist (Opus) from aiarena replays. SC2 type names follow python-sc2's UnitTypeId / UpgradeId enum spelling (PascalCase).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["metadata", "build_order", "composition_targets", "macro_rules"],
+  "properties": {
+    "metadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_version", "matchup", "generated_at", "generator"],
+      "properties": {
+        "schema_version": {
+          "type": "string",
+          "description": "Semver of the playbook schema this file targets.",
+          "pattern": "^\\d+\\.\\d+(\\.\\d+)?$"
+        },
+        "matchup": {
+          "type": "string",
+          "enum": ["PvP", "PvT", "PvZ"],
+          "description": "Which matchup this playbook applies to. The bot loads the file matching self.enemy_race at game start."
+        },
+        "generated_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "generator": {
+          "type": "string",
+          "description": "What produced this playbook. 'manual' for hand-authored, 'opus-<version>' for strategist output, etc."
+        },
+        "source_replays": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of aiarena replays the strategist used to derive this playbook. 0 for manual."
+        },
+        "notes": {
+          "type": "string",
+          "description": "Free-form notes from the strategist or human author."
+        }
+      }
+    },
+
+    "build_order": {
+      "type": "array",
+      "description": "Ordered list of opening / mid-game steps. The bot executes these in sequence, gated by each step's trigger.",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/build_step" }
+    },
+
+    "composition_targets": {
+      "type": "object",
+      "description": "Target army composition by game phase. Each phase maps unit type names to ratios that should sum to ~1.0. The bot uses these to prioritize what to produce when production capacity is free.",
+      "additionalProperties": false,
+      "required": ["early", "mid", "late"],
+      "properties": {
+        "early": { "$ref": "#/$defs/composition_map" },
+        "mid":   { "$ref": "#/$defs/composition_map" },
+        "late":  { "$ref": "#/$defs/composition_map" }
+      }
+    },
+
+    "macro_rules": {
+      "type": "object",
+      "description": "Numeric rules that drive macro decisions outside of the scripted build order.",
+      "additionalProperties": false,
+      "required": ["probe_cap", "gas_workers_per_geyser", "supply_buffer_pct", "max_bases"],
+      "properties": {
+        "probe_cap": {
+          "type": "integer",
+          "minimum": 16,
+          "maximum": 90,
+          "description": "Hard cap on total probes across all bases."
+        },
+        "gas_workers_per_geyser": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 3,
+          "description": "Probes assigned to each Assimilator. 3 = full saturation, lower values starve gas to favor mineral-heavy comps."
+        },
+        "supply_buffer_pct": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 0.5,
+          "description": "Fraction of supply cap to keep as buffer before queuing the next Pylon."
+        },
+        "expand_at_supply": {
+          "type": "integer",
+          "minimum": 14,
+          "maximum": 200,
+          "description": "Optional supply trigger for the natural expansion if it isn't already in build_order."
+        },
+        "max_bases": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 6,
+          "description": "Upper bound on simultaneously-active Nexuses."
+        }
+      }
+    },
+
+    "reactions": {
+      "type": "array",
+      "description": "Conditional adjustments triggered by scouted enemy patterns. Trigger and response are name-keyed strings; the BOT defines which names are valid (vocabulary lives in code, not in this schema). Unknown names should be ignored with a warning at load time.",
+      "items": { "$ref": "#/$defs/reaction" }
+    }
+  },
+
+  "$defs": {
+    "trigger": {
+      "type": "object",
+      "description": "When a build_step fires. Exactly one of supply / seconds / on must be present.",
+      "oneOf": [
+        {
+          "additionalProperties": false,
+          "required": ["supply"],
+          "properties": {
+            "supply": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 200,
+              "description": "Fire when our current supply count reaches this value."
+            }
+          }
+        },
+        {
+          "additionalProperties": false,
+          "required": ["seconds"],
+          "properties": {
+            "seconds": {
+              "type": "number",
+              "minimum": 0,
+              "description": "Fire at this in-game time (game seconds, not real seconds)."
+            }
+          }
+        },
+        {
+          "additionalProperties": false,
+          "required": ["on"],
+          "properties": {
+            "on": {
+              "type": "string",
+              "description": "Fire when a named in-game event occurs. Vocabulary defined by the bot (e.g. 'cybernetics_core_complete', 'first_warpgate_finished').",
+              "pattern": "^[a-z][a-z0-9_]*$"
+            }
+          }
+        }
+      ]
+    },
+
+    "action": {
+      "type": "object",
+      "description": "What the build_step does.",
+      "additionalProperties": false,
+      "required": ["kind", "target"],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": ["produce", "research", "expand", "chrono"],
+          "description": "produce = build a structure or train a unit (bot dispatches by target type). research = upgrade. expand = take the next base (target should be Nexus). chrono = chrono-boost the named building/upgrade."
+        },
+        "target": {
+          "type": "string",
+          "description": "python-sc2 UnitTypeId or UpgradeId name (PascalCase). Examples: Pylon, Gateway, CyberneticsCore, Stalker, Probe, Nexus, WarpGate, Charge, Blink.",
+          "pattern": "^[A-Z][A-Za-z0-9]*$"
+        },
+        "count": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1,
+          "description": "How many instances of target to produce at this step. Ignored for research/chrono."
+        }
+      }
+    },
+
+    "build_step": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["trigger", "action"],
+      "properties": {
+        "trigger": { "$ref": "#/$defs/trigger" },
+        "action":  { "$ref": "#/$defs/action" },
+        "chrono": {
+          "type": "boolean",
+          "default": false,
+          "description": "If true, chrono-boost this production/research as soon as energy is available. Shorthand for a separate chrono action."
+        },
+        "only_if": {
+          "type": "string",
+          "description": "Optional reaction trigger name. If set, this step only executes when that reaction has fired. Vocabulary defined by the bot.",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "skip_if": {
+          "type": "string",
+          "description": "Inverse of only_if — skip this step if the named reaction has fired.",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        }
+      }
+    },
+
+    "composition_map": {
+      "type": "object",
+      "description": "Map of unit type name to target ratio (0..1). Ratios across the map should sum to ~1.0; the bot will renormalize if they don't.",
+      "minProperties": 1,
+      "patternProperties": {
+        "^[A-Z][A-Za-z0-9]*$": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 1.0
+        }
+      },
+      "additionalProperties": false
+    },
+
+    "reaction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["trigger", "response"],
+      "properties": {
+        "trigger": {
+          "type": "string",
+          "description": "Name of a scouted-pattern detector defined by the bot (e.g. 'proxy_gate', 'mass_roach', 'mutalisks'). Snake_case.",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "response": {
+          "type": "string",
+          "description": "Name of a response handler defined by the bot (e.g. 'early_shield_battery', 'tech_to_immortal'). Snake_case.",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "priority": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 0,
+          "description": "Higher priority reactions win when triggers conflict."
+        },
+        "notes": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}
