@@ -11,6 +11,15 @@ The "agent" is the system as a whole — a long-lived offline brain that learns 
 - **`playbook/`** — JSON schema and per-matchup playbooks (`pvp.json`, `pvt.json`, `pvz.json`). The contract between the strategist and the bot. Schema enforces shape; the bot enforces vocabulary.
 - **`tests/`** — unit + sim tests for the bot and strategist.
 
+## Adaptation, in four tiers
+
+The agent learns at four different timescales. Each catches things the others miss.
+
+1. **Within a match** (milliseconds): scripted reactions in the playbook fire when scouting detects known enemy patterns (proxy gate, mass roach, etc.). No LLM — too slow for real-time.
+2. **Across matches against the same opponent** (game-to-game): the bot writes a per-opponent file to aiarena's persistent `./data` directory after every match. At game start, if we've played this opponent before, we load priors that bias the playbook execution — earlier defense vs known rushers, tech-target shifts vs known compositions, pre-popped reactions for highly predictable openings. Schema in [`playbook/opponent_schema.json`](playbook/opponent_schema.json), worked example in [`playbook/opponents.example.json`](playbook/opponents.example.json).
+3. **Between submissions** (hours to days): the offline `strategist/` runs a two-stage Opus pipeline — replay parsing produces structured postmortems, then a second pass rewrites the matchup playbook from those postmortems. Faster and more sample-efficient than dumping raw replays at an LLM.
+4. **Across playbook variants** (long-term): the strategist generates multiple variants per matchup; the bot picks one per match via Thompson sampling on recent winrate. Forces exploration, prevents local-maximum lock-in.
+
 ## Why "agent" + "bot"
 
 The project is the **agent**. The thing that submits to and runs on aiarena is a **bot** — that's the term aiarena and python-sc2 use, and we keep it for the in-game piece so the code reads naturally against those ecosystems.

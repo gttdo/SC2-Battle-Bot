@@ -1,0 +1,173 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/gttdo/SC2-Battle-Bot/playbook/opponent_schema.json",
+  "title": "SC2 Agent Opponent Priors",
+  "description": "Per-(opponent, matchup) memory the bot writes to ./data/opponents/<opponent_name>_<matchup>.json after each match and reads at game start. This is the in-match adaptation tier: lets the bot bias playbook execution based on what we've seen this opponent do before, without needing the offline strategist to re-run. Distinct from the playbook itself, which is matchup-wide.",
+
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "opponent_name", "matchup", "match_count", "wins", "losses", "last_seen", "observations", "derived"],
+
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+(\\.\\d+)?$"
+    },
+    "opponent_name": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Opponent bot's name as reported by aiarena. Filename is <opponent_name>_<matchup>.json (sanitized)."
+    },
+    "matchup": {
+      "type": "string",
+      "enum": ["PvP", "PvT", "PvZ"],
+      "description": "Matchup these priors apply to. An opponent that plays Random gets one file per race."
+    },
+    "match_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "wins":   { "type": "integer", "minimum": 0 },
+    "losses": { "type": "integer", "minimum": 0 },
+    "ties":   { "type": "integer", "minimum": 0, "default": 0 },
+    "last_seen": {
+      "type": "string",
+      "format": "date-time"
+    },
+
+    "observations": {
+      "type": "array",
+      "description": "Append-only log of recent matches against this opponent. Trimmed to most-recent N (default 50) when written, to keep file size bounded.",
+      "maxItems": 100,
+      "items": { "$ref": "#/$defs/observation" }
+    },
+
+    "derived": {
+      "type": "object",
+      "description": "Summary computed from observations after every match write. The bot reads ONLY this section at game start; observations are kept for offline analysis by the strategist.",
+      "additionalProperties": false,
+      "required": ["confidence"],
+      "properties": {
+        "confidence": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 1.0,
+          "description": "How much weight to give these priors. Increases with match_count, decreases with variance across observations. Below ~0.3 the bot should mostly ignore these and rely on the playbook."
+        },
+        "build_signature": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$",
+          "description": "Tag for the opponent's typical opening (e.g. 'fast_4gate', 'cannon_rush', 'standard_econ', '12_pool', 'fast_third'). Vocabulary defined by the bot — unknown values must be ignored on read with a warning."
+        },
+        "expected_first_attack_seconds": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Median in-game time of opponent's first significant attack across recorded observations. The bot uses this to advance defensive prep."
+        },
+        "expected_expansion_seconds": {
+          "type": ["number", "null"],
+          "description": "Median in-game time opponent took natural expansion. Null if they reliably skip it (all-in tendencies)."
+        },
+        "prepop_reactions": {
+          "type": "array",
+          "description": "Reaction trigger names to activate at game start as if already scouted. Bot enforces vocabulary; unknown names ignored with warning. Used to pre-load defensive responses for highly predictable opponents.",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*$"
+          },
+          "uniqueItems": true
+        },
+        "expected_composition": {
+          "type": "object",
+          "description": "Mid-game composition observed in past matches. Same shape as composition_map in the playbook schema. Bot uses this to bias tech targeting (e.g. rush Immortals if expected composition is heavy roach).",
+          "patternProperties": {
+            "^[A-Z][A-Za-z0-9]*$": {
+              "type": "number",
+              "minimum": 0.0,
+              "maximum": 1.0
+            }
+          },
+          "additionalProperties": false
+        },
+        "loss_patterns": {
+          "type": "array",
+          "description": "Short free-form tags describing recurring causes of our losses vs this opponent. Mainly a signal for the offline strategist's postmortem; the bot does not parse these.",
+          "items": { "type": "string" },
+          "uniqueItems": true
+        }
+      }
+    }
+  },
+
+  "$defs": {
+    "observation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["timestamp", "result", "map", "duration_seconds", "our_playbook_version"],
+      "properties": {
+        "timestamp": { "type": "string", "format": "date-time" },
+        "result": { "type": "string", "enum": ["win", "loss", "tie"] },
+        "map": { "type": "string" },
+        "duration_seconds": { "type": "number", "minimum": 0 },
+        "our_playbook_version": {
+          "type": "string",
+          "description": "Schema_version + generator tag from the playbook we used. Lets the strategist segregate observations by which playbook generated them."
+        },
+
+        "their_opening": {
+          "type": "object",
+          "description": "First key timings observed via scouting. Absent fields = not seen.",
+          "additionalProperties": false,
+          "properties": {
+            "first_pylon_supply": { "type": "integer", "minimum": 0 },
+            "first_gateway_supply": { "type": "integer", "minimum": 0 },
+            "second_gateway_supply": { "type": "integer", "minimum": 0 },
+            "first_assimilator_supply": { "type": "integer", "minimum": 0 },
+            "first_expansion_seconds": { "type": ["number", "null"] },
+            "first_tech_structure": {
+              "type": ["string", "null"],
+              "description": "PascalCase python-sc2 UnitTypeId name, e.g. 'CyberneticsCore', 'TwilightCouncil'."
+            },
+            "first_tech_seconds": { "type": ["number", "null"] }
+          }
+        },
+
+        "their_first_attack": {
+          "type": ["object", "null"],
+          "additionalProperties": false,
+          "properties": {
+            "seconds": { "type": "number", "minimum": 0 },
+            "composition": {
+              "type": "object",
+              "description": "Unit-type -> count snapshot at first significant engagement.",
+              "patternProperties": {
+                "^[A-Z][A-Za-z0-9]*$": { "type": "integer", "minimum": 0 }
+              },
+              "additionalProperties": false
+            }
+          }
+        },
+
+        "our_scouted_reactions_fired": {
+          "type": "array",
+          "description": "Reaction trigger names that fired during this match.",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*$"
+          },
+          "uniqueItems": true
+        },
+
+        "our_critical_event": {
+          "type": ["string", "null"],
+          "description": "Short tag for the pivotal moment that decided the match. Vocabulary defined by the bot (e.g. 'lost_main_army_at_3_30', 'killed_their_third_at_5_00', 'attrition_macro_loss')."
+        },
+
+        "notes": {
+          "type": "string",
+          "description": "Optional free-form note. Mainly useful when the strategist or a human writes back to a file during analysis."
+        }
+      }
+    }
+  }
+}

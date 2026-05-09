@@ -1,0 +1,92 @@
+{
+  "_comment": "Synthetic example of the per-opponent priors file the bot writes to ./data/opponents/<name>_<matchup>.json. Committed as a reference for the schema; real files are runtime output and gitignored.",
+
+  "schema_version": "0.1",
+  "opponent_name": "BlinkerBot",
+  "matchup": "PvP",
+  "match_count": 8,
+  "wins": 3,
+  "losses": 5,
+  "ties": 0,
+  "last_seen": "2026-05-08T12:34:00Z",
+
+  "observations": [
+    {
+      "timestamp": "2026-05-08T12:34:00Z",
+      "result": "loss",
+      "map": "Site Delta LE",
+      "duration_seconds": 412,
+      "our_playbook_version": "0.1+manual",
+      "their_opening": {
+        "first_pylon_supply": 14,
+        "first_gateway_supply": 16,
+        "second_gateway_supply": 17,
+        "first_assimilator_supply": 22,
+        "first_expansion_seconds": null,
+        "first_tech_structure": "CyberneticsCore",
+        "first_tech_seconds": 178
+      },
+      "their_first_attack": {
+        "seconds": 215,
+        "composition": { "Stalker": 4, "Zealot": 2 }
+      },
+      "our_scouted_reactions_fired": ["proxy_gate"],
+      "our_critical_event": "lost_main_army_at_3_30"
+    },
+    {
+      "timestamp": "2026-05-07T19:12:00Z",
+      "result": "loss",
+      "map": "Babylon LE",
+      "duration_seconds": 388,
+      "our_playbook_version": "0.1+manual",
+      "their_opening": {
+        "first_pylon_supply": 14,
+        "first_gateway_supply": 16,
+        "second_gateway_supply": 18,
+        "first_assimilator_supply": 21,
+        "first_expansion_seconds": null
+      },
+      "their_first_attack": {
+        "seconds": 222,
+        "composition": { "Stalker": 5, "Zealot": 1 }
+      },
+      "our_scouted_reactions_fired": [],
+      "our_critical_event": "lost_main_army_at_3_42"
+    },
+    {
+      "timestamp": "2026-05-06T03:01:00Z",
+      "result": "win",
+      "map": "Site Delta LE",
+      "duration_seconds": 624,
+      "our_playbook_version": "0.1+manual",
+      "their_opening": {
+        "first_pylon_supply": 14,
+        "first_gateway_supply": 16,
+        "second_gateway_supply": 17,
+        "first_assimilator_supply": 22
+      },
+      "their_first_attack": {
+        "seconds": 218,
+        "composition": { "Stalker": 4, "Zealot": 2 }
+      },
+      "our_scouted_reactions_fired": ["proxy_gate"],
+      "our_critical_event": "killed_their_pylon_wall_at_3_25"
+    }
+  ],
+
+  "derived": {
+    "confidence": 0.72,
+    "build_signature": "fast_4gate",
+    "expected_first_attack_seconds": 218,
+    "expected_expansion_seconds": null,
+    "prepop_reactions": ["proxy_gate"],
+    "expected_composition": {
+      "Stalker": 0.7,
+      "Zealot": 0.3
+    },
+    "loss_patterns": [
+      "engaged_below_critical_mass",
+      "no_shield_battery_at_natural"
+    ]
+  }
+}
