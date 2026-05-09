@@ -20,19 +20,17 @@ match_observation) are testable on their own.
 from __future__ import annotations
 
 import json
-import logging
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Optional
 
 from ares import AresBot
+from loguru import logger
 
 from bot import match_observation, opponent_memory, reactions, strategy
 
 if TYPE_CHECKING:
     from sc2.data import Result
     from sc2.unit import Unit
-
-logger = logging.getLogger(__name__)
 
 PLAYBOOK_VERSION = "0.2+manual"
 PLAYBOOK_DIR = Path(__file__).resolve().parent.parent / "playbook"
@@ -63,23 +61,23 @@ class SC2Agent(AresBot):
 
         self.matchup = self._matchup_label()
         opp_id = getattr(self, "opponent_id", None) or "unknown"
-        logger.info("on_start: matchup=%s, opponent_id=%s", self.matchup, opp_id)
+        logger.info(f"on_start: matchup={self.matchup}, opponent_id={opp_id}")
 
         # ---- Tier-2: load opponent priors -------------------------------
         self.opponent_priors = opponent_memory.load(opp_id, self.matchup)
         if self.opponent_priors:
             n = self.opponent_priors.get("match_count", 0)
             conf = self.opponent_priors.get("derived", {}).get("confidence", 0.0)
-            logger.info("priors loaded: %d prior matches, confidence=%.2f", n, conf)
+            logger.info(f"priors loaded: {n} prior matches, confidence={conf:.2f}")
 
         # ---- Load matchup playbook (drives strategy.update each step) ---
         self.playbook = self._load_playbook(self.matchup)
         if self.playbook:
+            n_build = len(self.playbook.get("build_order", []))
+            n_react = len(self.playbook.get("reactions", []))
             logger.info(
-                "playbook loaded: %s (%d build steps, %d reactions)",
-                self.matchup,
-                len(self.playbook.get("build_order", [])),
-                len(self.playbook.get("reactions", [])),
+                f"playbook loaded: {self.matchup} "
+                f"({n_build} build steps, {n_react} reactions)"
             )
 
         # ---- Initialize match recorder ---------------------------------
@@ -104,15 +102,13 @@ class SC2Agent(AresBot):
         runner = getattr(self, "build_order_runner", None)
         parsed = list(getattr(runner, "build_order", []) or [])
         chosen = getattr(runner, "chosen_opening", "?")
-        logger.info(
-            "build_runner: chosen_opening=%s, parsed_steps=%d", chosen, len(parsed),
-        )
+        logger.info(f"build_runner: chosen_opening={chosen}, parsed_steps={len(parsed)}")
         if parsed:
             preview = [
                 f"{getattr(s, 'start_at_supply', '?')}@{getattr(s, 'command', '?')}"
                 for s in parsed[:6]
             ]
-            logger.info("build_runner: first steps = %s", preview)
+            logger.info(f"build_runner: first steps = {preview}")
 
     async def on_step(self, iteration: int) -> None:
         await super().on_step(iteration)
@@ -178,12 +174,11 @@ class SC2Agent(AresBot):
         target = self.matchup
         try:
             runner.switch_opening(target)
-            logger.info("build: switched to %s", target)
-        except Exception:
+            logger.info(f"build: switched to {target}")
+        except Exception as exc:
             logger.warning(
-                "build: switch_opening(%r) failed; ares will use Cycle/Winrate default",
-                target,
-                exc_info=True,
+                f"build: switch_opening({target!r}) failed ({exc}); "
+                "ares will use Cycle/Winrate default"
             )
 
     def _persist_observation(self, game_result: "Result") -> None:
@@ -219,8 +214,7 @@ class SC2Agent(AresBot):
         opponent_memory.record_observation(state, observation)
         opponent_memory.save(state)
         logger.info(
-            "on_end: wrote observation for %s (%s) -> %s",
-            opp_id, self.matchup, result_label,
+            f"on_end: wrote observation for {opp_id} ({self.matchup}) -> {result_label}"
         )
 
     @staticmethod
@@ -244,7 +238,7 @@ class SC2Agent(AresBot):
             with path.open(encoding="utf-8") as f:
                 return json.load(f)
         except (OSError, json.JSONDecodeError) as e:
-            logger.warning("playbook: could not load %s: %s", path, e)
+            logger.warning(f"playbook: could not load {path}: {e}")
             return None
 
     @staticmethod

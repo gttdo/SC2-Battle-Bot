@@ -13,23 +13,32 @@ the pure helpers without a full game context).
 
 from __future__ import annotations
 
-import logging
 from typing import TYPE_CHECKING, Any
+
+# loguru is used everywhere else in the bot stack (ares, run.py, sc2)
+# so we route through it too — keeps log lines on a single stream and
+# visible at INFO without needing stdlib logging config.
+from loguru import logger
 
 if TYPE_CHECKING:
     from ares import AresBot
     from sc2.position import Point2
-
-logger = logging.getLogger(__name__)
 
 # Phase boundaries in our supply count. v0 hand-tuned; the strategist will
 # eventually drive these per matchup.
 EARLY_END_SUPPLY = 50
 MID_END_SUPPLY = 120
 
-# Army state-machine thresholds (combat-unit supply).
-ATTACK_SUPPLY = 60
-DEFEND_SUPPLY = 25
+# Army state-machine thresholds (combat-unit supply). v0 is intentionally
+# trigger-happy: 5 supply (~3 marines or 1 marauder + 1 marine + 1 reaper)
+# is enough to push. Real strategy scales this up; v0 prioritizes the bot
+# actually doing something visible over winning. Tune as production scales.
+ATTACK_SUPPLY = 5
+DEFEND_SUPPLY = 2
+
+# How often (in game-seconds) to emit a strategy status log line. Avoids
+# spamming once-per-step but gives us enough signal to diagnose army flow.
+LOG_INTERVAL_SECONDS = 30.0
 
 # Approximate supply costs for fast army-supply summation. Static table is
 # faster than calling calculate_supply_cost per unit per step.
@@ -84,7 +93,7 @@ def composition_for_ares(
         try:
             uid = UnitTypeId[name.upper()]
         except KeyError:
-            logger.warning("strategy: unknown unit name %r in comp_map; skipping", name)
+            logger.warning(f"strategy: unknown unit name {name!r} in comp_map; skipping")
             continue
         out[uid] = {"proportion": float(prop), "priority": min(i, 10)}
     return out
@@ -120,12 +129,11 @@ def attack_target(bot: "AresBot") -> "Point2":
 
 
 def hold_position(bot: "AresBot") -> "Point2":
-    """Where to gather while building army — between our base and the enemy
-    so defenders can engage incoming attacks before reaching production."""
-    main = bot.start_location
-    if bot.enemy_start_locations:
-        return main.towards(bot.enemy_start_locations[0], distance=15)
-    return main
+    """Where to gather while building army. v0 holds at our main — units
+    walking forward to a midmap rally got picked off before reaching critical
+    mass last game. Defending in the main means production buildings are
+    auto-defended by the army that just spawned from them."""
+    return bot.start_location
 
 
 def update(bot: "AresBot", playbook: dict[str, Any] | None) -> None:
@@ -162,21 +170,48 @@ def update(bot: "AresBot", playbook: dict[str, Any] | None) -> None:
 
     # Army control: hold or attack as a single group.
     units = army_units(bot)
-    if not units:
-        return
-
     a_supply = army_supply(units)
-    target = attack_target(bot) if a_supply >= ATTACK_SUPPLY else hold_position(bot)
+    attacking = a_supply >= ATTACK_SUPPLY
+    target = attack_target(bot) if attacking else hold_position(bot)
 
-    try:
-        from ares.behaviors.combat.group.a_move_group import AMoveGroup
+    if units:
+        try:
+            from ares.behaviors.combat.group.a_move_group import AMoveGroup
 
-        bot.register_behavior(
-            AMoveGroup(
-                group=units,
-                group_tags={u.tag for u in units},
-                target=target,
+            bot.register_behavior(
+                AMoveGroup(
+                    group=units,
+                    group_tags={u.tag for u in units},
+                    target=target,
+                )
             )
-        )
-    except Exception:  # pragma: no cover
-        logger.exception("strategy: AMoveGroup register failed")
+        except Exception:  # pragma: no cover
+            logger.exception("strategy: AMoveGroup register failed")
+
+    # Periodic status log so we can diagnose without watching every frame.
+    _log_status_periodically(bot, phase, a_supply, attacking, target, len(units))
+
+
+def _log_status_periodically(
+    bot: "AresBot",
+    phase: str,
+    a_supply: int,
+    attacking: bool,
+    target: "Point2",
+    unit_count: int,
+) -> None:
+    """Emit one status line per LOG_INTERVAL_SECONDS of in-game time."""
+    now = float(getattr(bot, "time", 0.0))
+    last = float(getattr(bot, "_last_strategy_log_time", -LOG_INTERVAL_SECONDS))
+    if now - last < LOG_INTERVAL_SECONDS:
+        return
+    bot._last_strategy_log_time = now  # type: ignore[attr-defined]
+    state = "ATTACK" if attacking else "HOLD"
+    target_str = (
+        f"({target.x:.0f},{target.y:.0f})" if hasattr(target, "x") else str(target)
+    )
+    logger.info(
+        f"strategy t={now:05.1f}s phase={phase} "
+        f"army={a_supply}/{ATTACK_SUPPLY} ({state}) target={target_str} "
+        f"unit_count={unit_count}"
+    )
