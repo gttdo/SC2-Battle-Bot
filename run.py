@@ -202,12 +202,12 @@ def main() -> None:
         ]
 
     enemy_race = random.choice([Race.Zerg, Race.Terran, Race.Protoss])
-    # v0: dial down from CheatVision to Easy so we can iterate strategy
-    # against a fair-economy opponent. CheatVision sees our whole map and
-    # has cheat-tier macro — we'll come back to it once the bot can hold
-    # its own. Override via SC2AGENT_DIFFICULTY env var if needed.
-    difficulty_name = os.environ.get("SC2AGENT_DIFFICULTY", "Easy")
-    difficulty = Difficulty[difficulty_name] if hasattr(Difficulty, difficulty_name) else Difficulty.Easy
+    # The bot is comfortably winning vs Easy after the home-defense fix —
+    # bumping the default to Medium for a real challenge. Override via
+    # SC2AGENT_DIFFICULTY env var to climb (Hard, Harder, VeryHard,
+    # CheatVision, CheatMoney, CheatInsane) or fall back to Easy.
+    difficulty_name = os.environ.get("SC2AGENT_DIFFICULTY", "Medium")
+    difficulty = Difficulty[difficulty_name] if hasattr(Difficulty, difficulty_name) else Difficulty.Medium
     logger.info(
         f"Starting local game on a random map vs {enemy_race} ({difficulty.name})..."
     )

@@ -49,6 +49,23 @@ DIAG_INTERVAL_SECONDS = 15.0  # tighter cadence for production diagnostics
 TERRAN_PRODUCTION_NAMES: tuple[str, ...] = (
     "BARRACKS", "FACTORY", "STARPORT",
 )
+
+# Upgrade priority list for Terran bio. ares's UpgradeController iterates
+# this in order; once it gets the first one researching it queues the next
+# from the same building (e.g. WeaponsLvl1 -> WeaponsLvl2 -> WeaponsLvl3).
+# Stim is already in the playbook's scripted opening but listing again is
+# harmless — UpgradeController skips already-pending or complete ones.
+TERRAN_BIO_UPGRADE_NAMES: tuple[str, ...] = (
+    "STIMPACK",
+    "SHIELDWALL",  # Combat Shield (Marine +10 HP)
+    "PUNISHERGRENADES",  # Concussive Shells (Marauder slow)
+    "TERRANINFANTRYWEAPONSLEVEL1",
+    "TERRANINFANTRYARMORSLEVEL1",
+    "TERRANINFANTRYWEAPONSLEVEL2",
+    "TERRANINFANTRYARMORSLEVEL2",
+    "TERRANINFANTRYWEAPONSLEVEL3",
+    "TERRANINFANTRYARMORSLEVEL3",
+)
 TERRAN_TECHLAB_NAMES: tuple[str, ...] = (
     "BARRACKSTECHLAB", "FACTORYTECHLAB", "STARPORTTECHLAB",
 )
@@ -225,6 +242,8 @@ def update(bot: "AresBot", playbook: dict[str, Any] | None) -> None:
         from ares.behaviors.macro.mining import Mining
         from ares.behaviors.macro.production_controller import ProductionController
         from ares.behaviors.macro.spawn_controller import SpawnController
+        from ares.behaviors.macro.upgrade_controller import UpgradeController
+        from sc2.ids.upgrade_id import UpgradeId
     except Exception:  # pragma: no cover
         logger.exception("strategy: failed to import ares macro behaviors")
         return
@@ -271,6 +290,23 @@ def update(bot: "AresBot", playbook: dict[str, Any] | None) -> None:
                 base_location=bot.start_location,
             )
         )
+
+        # Spend gas surplus on bio upgrades. Drops UpgradeController's
+        # priority gracefully — won't block army production if we can't
+        # afford the upgrade right now, just queues when ready.
+        upgrade_list = []
+        for name in TERRAN_BIO_UPGRADE_NAMES:
+            try:
+                upgrade_list.append(UpgradeId[name])
+            except KeyError:
+                continue  # python-sc2 might rename a key; skip silently
+        if upgrade_list:
+            bot.register_behavior(
+                UpgradeController(
+                    upgrade_list=upgrade_list,
+                    base_location=bot.start_location,
+                )
+            )
     except Exception:  # pragma: no cover — never crash the bot from strategy
         logger.exception("strategy: macro behavior register failed")
 

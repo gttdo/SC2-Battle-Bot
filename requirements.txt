@@ -7,6 +7,9 @@ PyYAML>=6.0
 jsonschema>=4.0
 pytest>=7.0
 
+# Strategist (offline LLM playbook regeneration)
+anthropic>=0.40
+
 # python-sc2 is published on PyPI under the name `burnysc2`.
 # Provides UnitTypeId / UpgradeId enums + the BotAI base ares-sc2 extends.
 burnysc2
