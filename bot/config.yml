@@ -1,0 +1,20 @@
+# SC2 Agent — bot config consumed by run.py and ares-sc2.
+#
+# MyBotName / MyBotRace are read by run.py to identify the bot to
+# python-sc2's Bot wrapper. Other keys are passed to ares; the canonical
+# list of valid options lives in ares-sc2/src/ares/config.yml.
+MyBotName: SC2Agent
+MyBotRace: Terran
+
+# Game step in frames. Lower = more decisions per second, but more CPU.
+# 2 is the ares-sc2 template default and a sensible starting point.
+GameStep: 2
+DebugGameStep: 2
+
+# We persist opponent priors ourselves under ./data/opponents/, separate
+# from ares's UseData (which is set in terran_builds.yml's top-level).
+UseData: True
+
+# Disable the tactical-ground-grid by default to save CPU; flip to True
+# only if a reaction or behavior needs disruptor-ball / pathing influence.
+TacticalGroundGrid: False

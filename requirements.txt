@@ -1,3 +1,18 @@
+# SC2 Agent — Python dependencies
+#
+# ares-sc2 is NOT pip-installable; it's a git clone alongside this repo.
+# See README.md for the clone + path setup. Everything below is on PyPI.
+
 PyYAML>=6.0
 jsonschema>=4.0
 pytest>=7.0
+
+# python-sc2 is published on PyPI under the name `burnysc2`.
+# Provides UnitTypeId / UpgradeId enums + the BotAI base ares-sc2 extends.
+burnysc2
+
+# Used by run.py + ladder.py + ares for structured logging.
+loguru>=0.7
+
+# Used by ladder.py to talk to aiarena's LadderManager websocket.
+aiohttp>=3.8
