@@ -41,17 +41,42 @@ MAP_FILE_EXT: str = "SC2Map"
 CONFIG_KEY_NAME: str = "MyBotName"
 CONFIG_KEY_RACE: str = "MyBotRace"
 
-# Default Maps directory by OS. Override here if SC2 is installed elsewhere.
+# Candidate Maps directories by OS. We pick the first one that exists and
+# has any *.SC2Map files. The user-folder paths come first because they
+# don't require admin rights to write to (handy when dropping in a fresh
+# aiarena map pack).
 plt = platform.system()
 if plt == "Windows":
-    MAPS_PATH: str = r"C:\Program Files (x86)\StarCraft II\Maps"
+    MAPS_CANDIDATES: list[str] = [
+        path.expandvars(r"%USERPROFILE%\Documents\StarCraft II\Maps"),
+        r"C:\Program Files (x86)\StarCraft II\Maps",
+        r"C:\Program Files\StarCraft II\Maps",
+    ]
 elif plt == "Darwin":
-    MAPS_PATH = "/Applications/StarCraft II/Maps"
+    MAPS_CANDIDATES = [
+        path.expanduser("~/Library/Application Support/Blizzard/StarCraft II/Maps"),
+        "/Applications/StarCraft II/Maps",
+    ]
 elif plt == "Linux":
-    MAPS_PATH = "~/Games/battlenet/drive_c/Program Files (x86)/StarCraft II/Maps"
+    MAPS_CANDIDATES = [
+        path.expanduser("~/Games/battlenet/drive_c/Program Files (x86)/StarCraft II/Maps"),
+        path.expanduser("~/StarCraftII/Maps"),
+    ]
 else:
     logger.error(f"{plt} not supported")
     sys.exit(1)
+
+
+def _find_maps_dir() -> str | None:
+    for candidate in MAPS_CANDIDATES:
+        if path.isdir(candidate):
+            has_maps = any(
+                p.suffix == f".{MAP_FILE_EXT}" for p in Path(candidate).glob(f"*.{MAP_FILE_EXT}")
+            )
+            if has_maps:
+                return candidate
+    # Return the first candidate even if empty so the warning message is informative
+    return MAPS_CANDIDATES[0] if MAPS_CANDIDATES else None
 
 
 def _read_bot_identity() -> tuple[str, Race]:
@@ -81,18 +106,23 @@ def main() -> None:
         logger.info(f"Result: {result} vs opponent {opponent_id}")
         return
 
-    # Local game: pick a random map from MAPS_PATH; fall back to a known
-    # ladder map list if SC2 isn't installed at the expected location.
-    map_list: List[str] = [
-        p.name.replace(f".{MAP_FILE_EXT}", "")
-        for p in Path(MAPS_PATH).glob(f"*.{MAP_FILE_EXT}")
-        if p.is_file()
-    ]
+    # Local game: pick a random map from whichever Maps dir actually has
+    # files. If none have any, fall back to a recent ladder map list so the
+    # error from python-sc2 is more legible than "no maps".
+    maps_dir = _find_maps_dir()
+    map_list: List[str] = []
+    if maps_dir:
+        map_list = [
+            p.name.replace(f".{MAP_FILE_EXT}", "")
+            for p in Path(maps_dir).glob(f"*.{MAP_FILE_EXT}")
+            if p.is_file()
+        ]
     if not map_list:
         logger.warning(
-            "No maps found at {}. Falling back to a recent ladder map list "
-            "(maps must be present locally for the game to load).",
-            MAPS_PATH,
+            "No maps found in any of: {}. Drop the aiarena map pack into one "
+            "of those folders. Falling back to a hardcoded ladder map list, "
+            "which will fail to load if those .SC2Map files aren't present.",
+            MAPS_CANDIDATES,
         )
         map_list = [
             "PylonAIE_v4", "PersephoneAIE_v4", "TorchesAIE_v4",
