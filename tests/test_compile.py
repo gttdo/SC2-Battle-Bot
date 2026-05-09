@@ -38,6 +38,45 @@ def test_target_to_ares_protoss_aliases():
     assert target_to_ares_command("Stalker", "Protoss") == "stalker"
 
 
+def test_upgrade_aliases_translate_display_names_to_enum_names():
+    """The bug that crashed our first regen-driven game: 'CombatShield' is
+    the in-game display name; python-sc2's UpgradeId enum is SHIELDWALL.
+    Same with ConcussiveShells / PUNISHERGRENADES. Untranslated names hit
+    AssertionError at game start. We translate at compile time."""
+    from playbook.compile import upgrade_to_ares_command
+
+    assert upgrade_to_ares_command("CombatShield", "Terran") == "shieldwall"
+    assert upgrade_to_ares_command("ConcussiveShells", "Terran") == "punishergrenades"
+    # Names that already match the enum pass through with simple lowercase
+    assert upgrade_to_ares_command("Stimpack", "Terran") == "stimpack"
+    assert upgrade_to_ares_command("TerranInfantryWeaponsLevel1", "Terran") == "terraninfantryweaponslevel1"
+
+
+def test_compile_translates_combat_shield_in_research_step():
+    """End-to-end: a research step with target=CombatShield should emit
+    `<supply> shieldwall` in OpeningBuildOrder, not `<supply> combatshield`.
+    Reproduces the v0 bug that made the bot resign at game start."""
+    pb = {
+        "metadata": {
+            "schema_version": "0.2", "matchup": "TvZ",
+            "generated_at": "2026-01-01T00:00:00Z", "generator": "test",
+        },
+        "build_order": [
+            {"trigger": {"supply": 16}, "action": {"kind": "produce", "target": "Barracks"}},
+            {"trigger": {"supply": 40}, "action": {"kind": "research", "target": "CombatShield"}},
+        ],
+        "composition_targets": {"early": {"Marine": 1.0}, "mid": {"Marine": 1.0}, "late": {"Marine": 1.0}},
+        "macro_rules": {
+            "worker_cap": 22, "gas_workers_per_geyser": 3,
+            "supply_buffer_pct": 0.15, "max_bases": 3,
+        },
+    }
+    build = compile_one_playbook(pb, race="Terran")
+    opening = build["OpeningBuildOrder"]
+    assert "40 shieldwall" in opening
+    assert "40 combatshield" not in opening
+
+
 def test_compile_tvz_top_level_yaml():
     pb = _load(PLAYBOOK_DIR / "tvz.json")
     yaml_text = compile_to_ares_yaml({"TvZ": pb}, bot_race="Terran", bot_name="SC2Agent")

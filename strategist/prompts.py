@@ -38,9 +38,16 @@ into ares-sc2's BuildRunner YAML format. That compiler supports:
 CONSTRAINTS
 
   - Output a single playbook JSON object matching the schema below.
-  - Do not reference units or upgrades that don't exist in python-sc2's
-    UnitTypeId / UpgradeId enums (PascalCase strings: SupplyDepot, Barracks,
-    Marauder, Stimpack, etc.).
+  - Use the EXACT python-sc2 enum names (PascalCase) for units and upgrades.
+    These are the SC2 internal protobuf names, not always the in-game
+    display name. Examples that have caught bots before:
+      Combat Shield (display) -> ShieldWall (enum)
+      Concussive Shells (display) -> PunisherGrenades (enum)
+      Stimpack: Stimpack (matches)
+      +1 Infantry Weapons: TerranInfantryWeaponsLevel1 (matches)
+    When unsure of a name, prefer the obvious-PascalCase form and the
+    compiler will translate for known-alias cases — but unknown names
+    crash the bot at game start.
   - Build order should reach combat units within ~5 minutes (~supply 35).
   - composition_targets ratios within each phase should sum to ~1.0 (the
     bot renormalizes, but proximity matters for the LLM to plan honestly).

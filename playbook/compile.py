@@ -69,6 +69,37 @@ ALIASES_BY_RACE: dict[str, dict[str, str]] = {
     "Zerg": ALIASES_ZERG,
 }
 
+# Upgrade-name aliases. Humans (and the LLM strategist) refer to upgrades
+# by their in-game display name — "Combat Shield", "Concussive Shells" —
+# but python-sc2's UpgradeId enum uses the internal SC2 protobuf names
+# ("SHIELDWALL", "PUNISHERGRENADES"). When the compiler emits the display
+# name, ares's parser fails and the bot resigns at game start. Translate
+# at compile time. Any future Protoss / Zerg playbooks would extend this.
+UPGRADE_ALIASES_TERRAN: dict[str, str] = {
+    "CombatShield": "shieldwall",
+    "ConcussiveShells": "punishergrenades",
+    # All other Terran upgrade names happen to match the enum after lowercase:
+    # Stimpack -> STIMPACK, TerranInfantryWeaponsLevel1 -> TERRANINFANTRYWEAPONSLEVEL1, etc.
+}
+
+UPGRADE_ALIASES_BY_RACE: dict[str, dict[str, str]] = {
+    "Protoss": {},  # to fill in if/when a Protoss playbook ships
+    "Terran": UPGRADE_ALIASES_TERRAN,
+    "Zerg": {},
+}
+
+
+def upgrade_to_ares_command(target: str, race: str) -> str:
+    """Translate a playbook upgrade name to ares's expected token.
+
+    For race-known aliases, returns the lowercase enum name; for everything
+    else, falls through to plain lowercase (which is what ares's parser
+    uppercases and looks up on UpgradeId). Pure function — testable."""
+    aliases = UPGRADE_ALIASES_BY_RACE.get(race, {})
+    if target in aliases:
+        return aliases[target]
+    return target.lower()
+
 # Map our matchup labels to the bot's race so a single playbook file is enough
 # to infer which alias table to use without extra CLI flags.
 MATCHUP_TO_RACE: dict[str, str] = {
@@ -134,7 +165,7 @@ def _step_to_command(step: dict, supply: int, race: str) -> str | None:
     if kind == "produce":
         cmd = f"{supply} {target_to_ares_command(target, race)}"
     elif kind == "research":
-        cmd = f"{supply} {target.lower()}"
+        cmd = f"{supply} {upgrade_to_ares_command(target, race)}"
     elif kind == "expand":
         cmd = f"{supply} expand"
     elif kind == "chrono":

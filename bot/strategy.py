@@ -155,8 +155,52 @@ def army_supply(units: list) -> int:
 
 
 def attack_target(bot: "AresBot") -> "Point2":
-    """Where to push when we hit attack threshold."""
-    if bot.enemy_start_locations:
+    """Where to push when we hit attack threshold.
+
+    SC2 victory = destroying ALL enemy structures, not arriving at the
+    enemy spawn. Without this targeting, the bot a-moves to
+    enemy_start_locations[0] and stops; if the enemy expanded or has
+    proxies the army never finds them and the game stalls forever.
+
+    Priority:
+      1. The closest visible enemy structure (or memory-unit structure
+         that ares is still tracking after it left vision). Townhalls
+         (Hatchery / CommandCenter / Nexus) get a bias because killing
+         them denies economy. Within structure types we go by raw
+         distance from our start location.
+      2. enemy_start_locations[0] if nothing is visible — most common
+         place to find the next thing to kill.
+      3. game_info.map_center as a last resort (shouldn't normally hit).
+    """
+    enemy_structures = getattr(bot, "enemy_structures", None)
+    if enemy_structures:
+        # Townhall types — race-agnostic so it works across matchups.
+        townhall_names = {"Hatchery", "Lair", "Hive", "CommandCenter",
+                          "OrbitalCommand", "PlanetaryFortress", "Nexus"}
+
+        try:
+            anchor = bot.start_location
+
+            def _sort_key(s):
+                # Lower key sorts first. Townhalls get -1 priority bonus
+                # before distance, so they always come before non-townhalls
+                # at the same distance.
+                type_name = getattr(getattr(s, "type_id", None), "name", "")
+                is_townhall = 0 if type_name in townhall_names else 1
+                try:
+                    d2 = s.position.distance_to_squared(anchor)
+                except AttributeError:
+                    sx, sy = s.position[0], s.position[1]
+                    ax, ay = anchor[0], anchor[1]
+                    d2 = (sx - ax) ** 2 + (sy - ay) ** 2
+                return (is_townhall, d2)
+
+            closest = min(enemy_structures, key=_sort_key)
+            return closest.position
+        except (AttributeError, ValueError):
+            pass  # fall through to start-location fallback
+
+    if getattr(bot, "enemy_start_locations", None):
         return bot.enemy_start_locations[0]
     return bot.game_info.map_center
 
