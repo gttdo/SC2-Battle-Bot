@@ -326,13 +326,30 @@ def test_compile_time_trigger_emits_skip_comment():
 def test_compile_skip_if_recorded_in_notes_not_in_opening():
     """ares parses every list item in OpeningBuildOrder as a command and
     silently breaks on comment-style strings, so conditional notes must
-    NOT appear inline. They belong on the sibling `notes` key."""
-    pb = _load(PLAYBOOK_DIR / "tvz.json")
+    NOT appear inline. They belong on the sibling `notes` key.
+
+    Uses a synthetic playbook with a known skip_if rather than relying on
+    the live tvz.json, which the strategist may regenerate without any
+    skip_if steps."""
+    pb = {
+        "metadata": {
+            "schema_version": "0.2", "matchup": "TvZ",
+            "generated_at": "2026-01-01T00:00:00Z", "generator": "test",
+        },
+        "build_order": [
+            {"trigger": {"supply": 14}, "action": {"kind": "produce", "target": "SupplyDepot"}},
+            {"trigger": {"supply": 36}, "action": {"kind": "produce", "target": "Marine", "count": 4},
+             "skip_if": "ling_flood"},
+        ],
+        "composition_targets": {"early": {"Marine": 1.0}, "mid": {"Marine": 1.0}, "late": {"Marine": 1.0}},
+        "macro_rules": {
+            "worker_cap": 22, "gas_workers_per_geyser": 3,
+            "supply_buffer_pct": 0.15, "max_bases": 3,
+        },
+    }
     build = compile_one_playbook(pb)
     opening = build["OpeningBuildOrder"]
-    # Every item in opening should look like a real ares command.
     for line in opening:
         assert not line.startswith("#"), f"comment leaked into OpeningBuildOrder: {line!r}"
-    # The skip_if=ling_flood detail should still be captured somewhere.
     assert any("ling_flood" in n for n in build.get("notes", [])), \
         "expected ling_flood note in build['notes']"
