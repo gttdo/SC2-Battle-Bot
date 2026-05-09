@@ -2,52 +2,286 @@
   "metadata": {
     "schema_version": "0.2",
     "matchup": "TvZ",
-    "generated_at": "2026-05-08T00:00:00Z",
-    "generator": "manual",
-    "source_replays": 0,
-    "notes": "Initial reference TvZ playbook — Reaper Expand into Bio + Stim, transitioning to Marauder + Medivac off Starport. Used to validate the schema; not yet tuned. Replace with strategist-generated version once aiarena replays accumulate."
+    "generated_at": "2026-05-09T04:48:38Z",
+    "generator": "opus-4-7-r1",
+    "source_replays": 3,
+    "notes": "0/3 vs Zerg with median 11min losses suggests we lack early ling/bane defense and arrive at first push without combat shield/+1. Shifting to Reaper-Hellion FE: hellions out of factory before bio commits to crush ling pressure, then Tech Lab Stim + CombatShield + Eng Bay +1 timing around 8min, Starport Medivac, Widow Mines from second factory reactor swap. Fewer reapers, earlier safety."
   },
-
   "build_order": [
-    { "trigger": { "supply": 14 }, "action": { "kind": "produce", "target": "SupplyDepot" } },
-    { "trigger": { "supply": 16 }, "action": { "kind": "produce", "target": "Barracks" } },
-    { "trigger": { "supply": 16 }, "action": { "kind": "produce", "target": "Refinery" } },
-    { "trigger": { "supply": 19 }, "action": { "kind": "produce", "target": "Reaper" } },
-    { "trigger": { "supply": 20 }, "action": { "kind": "produce", "target": "OrbitalCommand" } },
-    { "trigger": { "supply": 20 }, "action": { "kind": "produce", "target": "Reaper" } },
-    { "trigger": { "supply": 21 }, "action": { "kind": "expand", "target": "CommandCenter" } },
-    { "trigger": { "supply": 22 }, "action": { "kind": "produce", "target": "Refinery" } },
-    { "trigger": { "supply": 24 }, "action": { "kind": "produce", "target": "Factory" } },
-    { "trigger": { "supply": 24 }, "action": { "kind": "produce", "target": "SupplyDepot" } },
-    { "trigger": { "supply": 26 }, "action": { "kind": "produce", "target": "Barracks" } },
-    { "trigger": { "on": "barracks_complete" }, "action": { "kind": "produce", "target": "BarracksTechLab" } },
-    { "trigger": { "on": "barracks_tech_lab_complete" }, "action": { "kind": "research", "target": "Stimpack" } },
-    { "trigger": { "supply": 30 }, "action": { "kind": "produce", "target": "Marauder", "count": 2 } },
-    { "trigger": { "supply": 32 }, "action": { "kind": "produce", "target": "Starport" } },
-    { "trigger": { "on": "starport_complete" }, "action": { "kind": "produce", "target": "Medivac" } },
-    { "trigger": { "supply": 36 }, "action": { "kind": "produce", "target": "Marine", "count": 4 }, "skip_if": "ling_flood" }
+    {
+      "trigger": {
+        "supply": 14
+      },
+      "action": {
+        "kind": "produce",
+        "target": "SupplyDepot"
+      }
+    },
+    {
+      "trigger": {
+        "supply": 16
+      },
+      "action": {
+        "kind": "produce",
+        "target": "Barracks"
+      }
+    },
+    {
+      "trigger": {
+        "supply": 16
+      },
+      "action": {
+        "kind": "produce",
+        "target": "Refinery"
+      }
+    },
+    {
+      "trigger": {
+        "supply": 19
+      },
+      "action": {
+        "kind": "produce",
+        "target": "Reaper"
+      }
+    },
+    {
+      "trigger": {
+        "supply": 19
+      },
+      "action": {
+        "kind": "produce",
+        "target": "OrbitalCommand"
+      }
+    },
+    {
+      "trigger": {
+        "supply": 20
+      },
+      "action": {
+        "kind": "expand",
+        "target": "CommandCenter"
+      }
+    },
+    {
+      "trigger": {
+        "supply": 21
+      },
+      "action": {
+        "kind": "produce",
+        "target": "Factory"
+      }
+    },
+    {
+      "trigger": {
+        "supply": 22
+      },
+      "action": {
+        "kind": "produce",
+        "target": "SupplyDepot"
+      }
+    },
+    {
+      "trigger": {
+        "supply": 24
+      },
+      "action": {
+        "kind": "produce",
+        "target": "Refinery"
+      }
+    },
+    {
+      "trigger": {
+        "on": "factory_complete"
+      },
+      "action": {
+        "count": 2,
+        "kind": "produce",
+        "target": "Hellion"
+      }
+    },
+    {
+      "trigger": {
+        "supply": 28
+      },
+      "action": {
+        "kind": "produce",
+        "target": "BarracksTechLab"
+      }
+    },
+    {
+      "trigger": {
+        "on": "barracks_tech_lab_complete"
+      },
+      "action": {
+        "kind": "research",
+        "target": "Stimpack"
+      }
+    },
+    {
+      "trigger": {
+        "supply": 30
+      },
+      "action": {
+        "kind": "produce",
+        "target": "Barracks"
+      }
+    },
+    {
+      "trigger": {
+        "supply": 32
+      },
+      "action": {
+        "kind": "produce",
+        "target": "EngineeringBay"
+      }
+    },
+    {
+      "trigger": {
+        "supply": 32
+      },
+      "action": {
+        "kind": "produce",
+        "target": "Starport"
+      }
+    },
+    {
+      "trigger": {
+        "supply": 34
+      },
+      "action": {
+        "count": 2,
+        "kind": "produce",
+        "target": "Marauder"
+      }
+    },
+    {
+      "trigger": {
+        "on": "engineering_bay_complete"
+      },
+      "action": {
+        "kind": "research",
+        "target": "TerranInfantryWeaponsLevel1"
+      }
+    },
+    {
+      "trigger": {
+        "on": "starport_complete"
+      },
+      "action": {
+        "kind": "produce",
+        "target": "Medivac"
+      }
+    },
+    {
+      "trigger": {
+        "supply": 40
+      },
+      "action": {
+        "kind": "research",
+        "target": "CombatShield"
+      }
+    },
+    {
+      "trigger": {
+        "supply": 42
+      },
+      "action": {
+        "kind": "produce",
+        "target": "SupplyDepot"
+      }
+    },
+    {
+      "trigger": {
+        "supply": 44
+      },
+      "action": {
+        "count": 4,
+        "kind": "produce",
+        "target": "Marine"
+      },
+      "skip_if": "ling_flood"
+    },
+    {
+      "trigger": {
+        "supply": 50
+      },
+      "action": {
+        "kind": "produce",
+        "target": "Factory"
+      }
+    },
+    {
+      "trigger": {
+        "supply": 54
+      },
+      "action": {
+        "count": 2,
+        "kind": "produce",
+        "target": "WidowMine"
+      }
+    }
   ],
-
   "composition_targets": {
-    "early": { "Marine": 0.6, "Reaper": 0.4 },
-    "mid":   { "Marine": 0.40, "Marauder": 0.25, "WidowMine": 0.15, "Medivac": 0.10, "Liberator": 0.10 },
-    "late":  { "Marine": 0.25, "Marauder": 0.15, "Liberator": 0.15, "Medivac": 0.10, "Ghost": 0.15, "SiegeTank": 0.10, "WidowMine": 0.10 }
+    "early": {
+      "Marine": 0.5,
+      "Reaper": 0.2,
+      "Hellion": 0.3
+    },
+    "mid": {
+      "Marine": 0.4,
+      "Marauder": 0.25,
+      "Medivac": 0.1,
+      "WidowMine": 0.15,
+      "Hellion": 0.1
+    },
+    "late": {
+      "Marine": 0.3,
+      "Marauder": 0.2,
+      "Medivac": 0.1,
+      "SiegeTank": 0.1,
+      "Liberator": 0.1,
+      "WidowMine": 0.1,
+      "Ghost": 0.1
+    }
   },
-
   "macro_rules": {
-    "worker_cap": 70,
+    "worker_cap": 66,
     "gas_workers_per_geyser": 3,
-    "supply_buffer_pct": 0.15,
-    "expand_at_supply": 21,
-    "max_bases": 4
+    "supply_buffer_pct": 0.12,
+    "max_bases": 4,
+    "expand_at_supply": 20
   },
-
   "reactions": [
-    { "trigger": "ling_flood",    "response": "wall_off_at_natural", "priority": 2, "notes": "Skip mid-supply marine wave; build extra depots/bunker first." },
-    { "trigger": "early_pool",    "response": "wall_off_at_natural", "priority": 2 },
-    { "trigger": "mass_roach",    "response": "tech_to_marauder",    "priority": 1 },
-    { "trigger": "mutas",         "response": "thor_or_cyclone",     "priority": 2 },
-    { "trigger": "nydus",         "response": "defensive_recall",    "priority": 2 },
-    { "trigger": "baneling_drop", "response": "marine_split_drill",  "priority": 1 }
+    {
+      "trigger": "ling_flood",
+      "response": "wall_off_at_natural",
+      "priority": 3,
+      "notes": "Hold marine wave, prioritize hellions and depot wall."
+    },
+    {
+      "trigger": "early_pool",
+      "response": "wall_off_at_natural",
+      "priority": 3
+    },
+    {
+      "trigger": "mass_roach",
+      "response": "tech_to_marauder",
+      "priority": 2
+    },
+    {
+      "trigger": "mutas",
+      "response": "thor_or_cyclone",
+      "priority": 3
+    },
+    {
+      "trigger": "nydus",
+      "response": "defensive_recall",
+      "priority": 2
+    },
+    {
+      "trigger": "baneling_drop",
+      "response": "marine_split_drill",
+      "priority": 2
+    }
   ]
 }

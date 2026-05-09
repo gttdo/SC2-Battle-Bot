@@ -21,24 +21,30 @@ BuildChoices:
 Builds:
   TvZ:
     AutoSupplyAtSupply: 0
-    ConstantWorkerProductionTill: 70
+    ConstantWorkerProductionTill: 66
     OpeningBuildOrder:
     - 14 supply
     - 16 barracks
     - 16 gas
-    - 18 barrackstechlab
     - 19 reaper
-    - 20 orbital
-    - 20 reaper
-    - 20 stimpack
-    - 21 expand
-    - 22 gas
-    - 24 factory
-    - 24 supply
-    - 26 barracks
-    - 30 marauder x2
+    - 19 orbital
+    - 20 expand
+    - 21 factory
+    - 22 supply
+    - 23 hellion x2
+    - 24 gas
+    - 28 barrackstechlab
+    - 30 stimpack
+    - 30 barracks
+    - 32 engineeringbay
     - 32 starport
+    - 34 marauder x2
+    - 34 terraninfantryweaponslevel1
     - 34 medivac
-    - 36 marine x4
+    - 40 combatshield
+    - 42 supply
+    - 44 marine x4
+    - 50 factory
+    - 54 widowmine x2
     notes:
-    - 'NOTE conditional step (runtime-only): 36 marine x4 skip_if=ling_flood'
+    - 'NOTE conditional step (runtime-only): 44 marine x4 skip_if=ling_flood'

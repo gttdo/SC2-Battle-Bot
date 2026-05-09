@@ -85,26 +85,29 @@ def test_compile_build_choices_picks_exact_matchup_when_available():
     assert "Random" in parsed["BuildChoices"]
 
 
-def test_compile_tvz_opening_contains_expected_steps():
+def test_compile_tvz_opening_contains_canonical_terran_openers():
+    """Whatever the strategist regenerates for TvZ, the very first steps
+    of any sane Terran opening should be 14-Depot / 16-Barracks / Refinery
+    / Orbital. Pinning to those alone keeps the test stable when Claude
+    rewrites the rest of the build."""
     pb = _load(PLAYBOOK_DIR / "tvz.json")
     build = compile_one_playbook(pb)
     opening = build["OpeningBuildOrder"]
 
-    # First step: 14 SupplyDepot -> "14 supply"
+    # 14 SupplyDepot is THE Terran opening — strategist outputs that diverge
+    # from this are far more likely a regression than an innovation.
     assert "14 supply" in opening
-    # Barracks at 16
+    # 16 Barracks is the standard follow-up. (Anything later is a slow build;
+    # anything earlier is unusual.)
     assert "16 barracks" in opening
-    # Orbital upgrade at 20
-    assert "20 orbital" in opening
-    # Expand at 21
-    assert "21 expand" in opening
-    # Marauder x2 at 30
-    assert "30 marauder x2" in opening
-    # Stim research at supply 18 (BarracksTechLab from event resolution +2)
-    # Barracks was at 16 -> tech_lab at 18 (no event, since on:barracks_complete -> 18)
-    # tech_lab itself triggers research at +2 = 20.
-    # We don't pin exact supply for the research step (depends on resolution chain),
-    # but `stimpack` should appear somewhere.
+    # OrbitalCommand is the must-have economic upgrade — the bot fails
+    # without MULEs. Don't pin supply because Claude may shift it.
+    assert any("orbital" in line for line in opening)
+    # Expand should appear somewhere in the opening — natural is the first
+    # base every Terran takes.
+    assert any("expand" in line for line in opening)
+    # Stim is the bio core upgrade and was the v0 reference's tech goal —
+    # if Claude drops it entirely, that's likely a strategic regression.
     assert any("stimpack" in line.lower() for line in opening)
 
 
