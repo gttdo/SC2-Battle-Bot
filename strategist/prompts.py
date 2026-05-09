@@ -43,11 +43,15 @@ CONSTRAINTS
     display name. Examples that have caught bots before:
       Combat Shield (display) -> ShieldWall (enum)
       Concussive Shells (display) -> PunisherGrenades (enum)
+      Viking (abstract, not buildable!) -> VikingFighter (air, anti-air/anti-Colossus)
+        or VikingAssault (ground attack mode)
+      Hellion: Hellion (matches; HellionTank is the battle-Hellion morph)
       Stimpack: Stimpack (matches)
       +1 Infantry Weapons: TerranInfantryWeaponsLevel1 (matches)
-    When unsure of a name, prefer the obvious-PascalCase form and the
-    compiler will translate for known-alias cases — but unknown names
-    crash the bot at game start.
+    When unsure, prefer the obvious-PascalCase form. Avoid abstract
+    parent types: 'Viking' looks valid (the enum exists) but isn't
+    actually a buildable unit and will crash the bot at the first
+    composition update. Use VikingFighter or VikingAssault explicitly.
   - Build order should reach combat units within ~5 minutes (~supply 35).
   - composition_targets ratios within each phase should sum to ~1.0 (the
     bot renormalizes, but proximity matters for the LLM to plan honestly).

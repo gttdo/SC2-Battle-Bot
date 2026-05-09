@@ -115,8 +115,26 @@ def select_phase(supply_used: int) -> str:
     return "late"
 
 
+# Composition-name aliases. Some python-sc2 UnitTypeId entries exist but
+# represent abstract units that aren't directly buildable — VIKING is a
+# parent type for VIKINGFIGHTER (air mode) and VIKINGASSAULT (ground mode);
+# only the concrete forms appear in UNIT_TRAINED_FROM. SpawnController
+# crashes with KeyError if we hand it the abstract type. Translate at the
+# composition layer.
+COMPOSITION_ALIASES_TERRAN: dict[str, str] = {
+    "Viking": "VikingFighter",  # default to air-mode (anti-Colossus / anti-air)
+}
+
+COMPOSITION_ALIASES_BY_RACE: dict[str, dict[str, str]] = {
+    "Terran": COMPOSITION_ALIASES_TERRAN,
+    "Protoss": {},
+    "Zerg": {},
+}
+
+
 def composition_for_ares(
     comp_map: dict[str, float],
+    race: str = "Terran",
 ) -> dict[Any, dict[str, Any]]:
     """Convert our playbook's `{pascal_str: ratio}` into ares's
     `{UnitTypeId: {proportion, priority}}` format.
@@ -125,21 +143,39 @@ def composition_for_ares(
     target ratio gets priority 0 (highest in ares's SpawnController).
     Capped at 10 because ares asserts `priority < 11`.
 
-    Unit names that don't exist in python-sc2's UnitTypeId enum are silently
-    dropped — schema validation should have caught typos upstream.
+    Names that don't exist in UnitTypeId — or that exist but aren't in
+    UNIT_TRAINED_FROM (abstract parent types like VIKING) — get silently
+    dropped with a warning. Schema validation can't catch the latter
+    because UnitTypeId.VIKING is a real enum value; only the runtime
+    requirement (it must be in UNIT_TRAINED_FROM to be buildable) catches
+    it. We also apply per-race aliases (Viking -> VikingFighter) before
+    lookup so common names map to their concrete variants.
     """
     try:
+        from sc2.dicts.unit_trained_from import UNIT_TRAINED_FROM
         from sc2.ids.unit_typeid import UnitTypeId
     except ImportError:
         return {}
 
+    aliases = COMPOSITION_ALIASES_BY_RACE.get(race, {})
     out: dict[Any, dict[str, Any]] = {}
     sorted_items = sorted(comp_map.items(), key=lambda kv: -kv[1])
     for i, (name, prop) in enumerate(sorted_items):
+        resolved_name = aliases.get(name, name)
         try:
-            uid = UnitTypeId[name.upper()]
+            uid = UnitTypeId[resolved_name.upper()]
         except KeyError:
-            logger.warning(f"strategy: unknown unit name {name!r} in comp_map; skipping")
+            logger.warning(
+                f"strategy: unknown unit name {name!r} in comp_map; skipping"
+            )
+            continue
+        # Even if the enum exists, the unit must be buildable — abstract
+        # parent types (e.g. UnitTypeId.VIKING) crash SpawnController.
+        if uid not in UNIT_TRAINED_FROM:
+            logger.warning(
+                f"strategy: {name!r} -> {uid.name} is not buildable "
+                "(missing from UNIT_TRAINED_FROM); skipping"
+            )
             continue
         out[uid] = {"proportion": float(prop), "priority": min(i, 10)}
     return out
@@ -301,7 +337,9 @@ def update(bot: "AresBot", playbook: dict[str, Any] | None) -> None:
     if not comp_targets:
         return
 
-    ares_comp = composition_for_ares(comp_targets)
+    # v0 is Terran-only; pass race so the alias table for Viking ->
+    # VikingFighter and similar lookups applies.
+    ares_comp = composition_for_ares(comp_targets, race="Terran")
     if not ares_comp:
         return
 
