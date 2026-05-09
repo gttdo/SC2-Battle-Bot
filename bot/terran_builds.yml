@@ -57,33 +57,37 @@ Builds:
     - 16 gas
     - 19 expand
     - 20 reaper
-    - 21 orbital
+    - 20 orbital
+    - 21 gas
     - 22 factory
     - 23 supply
-    - 24 gas
+    - 24 marine
     - 24 starport
-    - 26 marine x2
+    - 25 barrackstechlab
     - 26 starportreactor
-    - 30 barracks x2
-    - 32 barrackstechlab
-    - 33 orbital
-    - 34 supply
-    - 35 stimpack
-    - 38 factorytechlab
-    - 40 shieldwall
-    - 42 engineeringbay
-    - 44 medivac x2
-    - 48 siegetank x2
-    - 52 expand
-    - 56 supply x2
-    - 58 terraninfantryweaponslevel1
-    - 60 barracks x2
-    - 64 barrackstechlab
-    - 70 terraninfantryarmorslevel1
+    - 28 stimpack
+    - 30 orbital
+    - 32 bunker
+    - 34 factorytechlab
+    - 36 supply
+    - 38 shieldwall
+    - 40 siegetank
+    - 44 engineeringbay
+    - 46 medivac x2
+    - 50 barracks x2
+    - 54 siegetank
+    - 56 expand
+    - 60 supply x2
+    - 62 terraninfantryweaponslevel1
+    - 66 barrackstechlab
+    - 70 punishergrenades
     - 74 armory
-    - 80 engineeringbay
-    - 84 orbital
-    - 90 starport
+    - 78 vikingfighter x2
+    - 82 terraninfantryarmorslevel1
+    - 86 engineeringbay
+    - 90 orbital
+    - 96 starport
     - 100 terraninfantryweaponslevel2
     - 102 terraninfantryarmorslevel2
     - 110 expand
+    - 120 ghostacademy

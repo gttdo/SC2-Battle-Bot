@@ -2,10 +2,10 @@
   "metadata": {
     "schema_version": "1.0",
     "matchup": "TvP",
-    "generated_at": "2026-05-09T05:13:38+00:00",
-    "generator": "opus-4-7-tvp-r1",
-    "source_replays": 3,
-    "notes": "0% winrate prior. Their first attack ~644s (10:45) \u2014 typical Protoss timing (Stalker/Immortal/Sentry or Blink). Goals: faster Stim+Shield, earlier Medivacs (~7:00), 3CC up before their push, Tanks for splash vs gateway, Vikings for Colossus/Tempest. Defensive bunker at natural ramp, Engineering Bay turrets vs DT/Oracle."
+    "generated_at": "2026-05-09T05:50:45+00:00",
+    "generator": "opus-4-7-tvp-r2",
+    "source_replays": 7,
+    "notes": "25% winrate (1/4) up from 0%. Their first attack ~644s (10:45). Tighten timings: Factory+Starport faster, Tank+Medivac before 8:00, Stim+Shield earlier. Bio-tank-medivac with Vikings for Colossus, Engineering Bay defenses for DT/Oracle. Hold ramp with bunker+tank vs first push, then 3rd CC behind it."
   },
   "build_order": [
     {
@@ -55,11 +55,20 @@
     },
     {
       "trigger": {
-        "supply": 21
+        "supply": 20
       },
       "action": {
         "kind": "produce",
         "target": "OrbitalCommand"
+      }
+    },
+    {
+      "trigger": {
+        "supply": 21
+      },
+      "action": {
+        "kind": "produce",
+        "target": "Refinery"
       }
     },
     {
@@ -86,17 +95,16 @@
       },
       "action": {
         "kind": "produce",
-        "target": "Refinery"
+        "target": "Marine"
       }
     },
     {
       "trigger": {
-        "supply": 26
+        "supply": 25
       },
       "action": {
         "kind": "produce",
-        "target": "Marine",
-        "count": 2
+        "target": "BarracksTechLab"
       }
     },
     {
@@ -110,26 +118,16 @@
     },
     {
       "trigger": {
+        "supply": 28
+      },
+      "action": {
+        "kind": "research",
+        "target": "Stimpack"
+      }
+    },
+    {
+      "trigger": {
         "supply": 30
-      },
-      "action": {
-        "kind": "produce",
-        "target": "Barracks",
-        "count": 2
-      }
-    },
-    {
-      "trigger": {
-        "supply": 32
-      },
-      "action": {
-        "kind": "produce",
-        "target": "BarracksTechLab"
-      }
-    },
-    {
-      "trigger": {
-        "supply": 33
       },
       "action": {
         "kind": "produce",
@@ -138,20 +136,29 @@
     },
     {
       "trigger": {
-        "supply": 34
+        "supply": 32
       },
       "action": {
         "kind": "produce",
-        "target": "SupplyDepot"
+        "target": "Bunker"
       }
     },
     {
       "trigger": {
-        "supply": 35
+        "supply": 34
       },
       "action": {
-        "kind": "research",
-        "target": "Stimpack"
+        "kind": "produce",
+        "target": "FactoryTechLab"
+      }
+    },
+    {
+      "trigger": {
+        "supply": 36
+      },
+      "action": {
+        "kind": "produce",
+        "target": "SupplyDepot"
       }
     },
     {
@@ -168,8 +175,8 @@
         "supply": 38
       },
       "action": {
-        "kind": "produce",
-        "target": "FactoryTechLab"
+        "kind": "research",
+        "target": "ShieldWall"
       }
     },
     {
@@ -177,13 +184,13 @@
         "supply": 40
       },
       "action": {
-        "kind": "research",
-        "target": "ShieldWall"
+        "kind": "produce",
+        "target": "SiegeTank"
       }
     },
     {
       "trigger": {
-        "supply": 42
+        "supply": 44
       },
       "action": {
         "kind": "produce",
@@ -192,7 +199,7 @@
     },
     {
       "trigger": {
-        "supply": 44
+        "supply": 46
       },
       "action": {
         "kind": "produce",
@@ -202,45 +209,7 @@
     },
     {
       "trigger": {
-        "supply": 48
-      },
-      "action": {
-        "kind": "produce",
-        "target": "SiegeTank",
-        "count": 2
-      }
-    },
-    {
-      "trigger": {
-        "supply": 52
-      },
-      "action": {
-        "kind": "expand",
-        "target": "CommandCenter"
-      }
-    },
-    {
-      "trigger": {
-        "supply": 56
-      },
-      "action": {
-        "kind": "produce",
-        "target": "SupplyDepot",
-        "count": 2
-      }
-    },
-    {
-      "trigger": {
-        "supply": 58
-      },
-      "action": {
-        "kind": "research",
-        "target": "TerranInfantryWeaponsLevel1"
-      }
-    },
-    {
-      "trigger": {
-        "supply": 60
+        "supply": 50
       },
       "action": {
         "kind": "produce",
@@ -250,7 +219,44 @@
     },
     {
       "trigger": {
-        "supply": 64
+        "supply": 54
+      },
+      "action": {
+        "kind": "produce",
+        "target": "SiegeTank"
+      }
+    },
+    {
+      "trigger": {
+        "supply": 56
+      },
+      "action": {
+        "kind": "expand",
+        "target": "CommandCenter"
+      }
+    },
+    {
+      "trigger": {
+        "supply": 60
+      },
+      "action": {
+        "kind": "produce",
+        "target": "SupplyDepot",
+        "count": 2
+      }
+    },
+    {
+      "trigger": {
+        "supply": 62
+      },
+      "action": {
+        "kind": "research",
+        "target": "TerranInfantryWeaponsLevel1"
+      }
+    },
+    {
+      "trigger": {
+        "supply": 66
       },
       "action": {
         "kind": "produce",
@@ -263,7 +269,7 @@
       },
       "action": {
         "kind": "research",
-        "target": "TerranInfantryArmorsLevel1"
+        "target": "PunisherGrenades"
       }
     },
     {
@@ -277,7 +283,26 @@
     },
     {
       "trigger": {
-        "supply": 80
+        "supply": 78
+      },
+      "action": {
+        "kind": "produce",
+        "target": "VikingFighter",
+        "count": 2
+      }
+    },
+    {
+      "trigger": {
+        "supply": 82
+      },
+      "action": {
+        "kind": "research",
+        "target": "TerranInfantryArmorsLevel1"
+      }
+    },
+    {
+      "trigger": {
+        "supply": 86
       },
       "action": {
         "kind": "produce",
@@ -286,7 +311,7 @@
     },
     {
       "trigger": {
-        "supply": 84
+        "supply": 90
       },
       "action": {
         "kind": "produce",
@@ -295,7 +320,7 @@
     },
     {
       "trigger": {
-        "supply": 90
+        "supply": 96
       },
       "action": {
         "kind": "produce",
@@ -328,27 +353,36 @@
         "kind": "expand",
         "target": "CommandCenter"
       }
+    },
+    {
+      "trigger": {
+        "supply": 120
+      },
+      "action": {
+        "kind": "produce",
+        "target": "GhostAcademy"
+      }
     }
   ],
   "composition_targets": {
     "early": {
-      "Marine": 0.7,
-      "Reaper": 0.15,
+      "Marine": 0.75,
+      "Reaper": 0.1,
       "SiegeTank": 0.15
     },
     "mid": {
-      "Marine": 0.5,
+      "Marine": 0.45,
       "Marauder": 0.2,
       "Medivac": 0.15,
-      "SiegeTank": 0.1,
-      "Viking": 0.05
+      "SiegeTank": 0.12,
+      "VikingFighter": 0.08
     },
     "late": {
-      "Marine": 0.4,
+      "Marine": 0.38,
       "Marauder": 0.25,
       "Medivac": 0.15,
-      "SiegeTank": 0.1,
-      "Viking": 0.07,
+      "SiegeTank": 0.12,
+      "VikingFighter": 0.07,
       "Ghost": 0.03
     }
   },
@@ -362,44 +396,44 @@
     {
       "trigger": "dt_rush",
       "response": "build_turrets_and_raven",
-      "priority": 3,
-      "notes": "Engineering Bay -> 2 turrets per base, scan, accelerate Starport for Raven."
+      "priority": 4,
+      "notes": "EBay + 2 turrets per base, scan aggressively, rush Raven."
     },
     {
       "trigger": "oracle_harass",
       "response": "build_turrets_and_raven",
-      "priority": 3,
-      "notes": "Pull marines under turrets, prioritize EBay + missile turrets at mineral lines."
+      "priority": 4,
+      "notes": "Turrets at mineral lines, marines under turrets, no SCV chase."
     },
     {
       "trigger": "proxy_gateway",
       "response": "wall_off_at_natural",
-      "priority": 4,
+      "priority": 5,
       "notes": "Bunker at natural, pull SCVs if Zealots arrive before Marines."
     },
     {
       "trigger": "blink_stalkers",
       "response": "tech_to_marauder",
-      "priority": 2,
-      "notes": "Push Concussive + Marauder count, hold high ground with tanks."
+      "priority": 3,
+      "notes": "Concussive + Marauder, tanks on high ground, raise depots."
     },
     {
       "trigger": "colossus",
       "response": "build_vikings",
-      "priority": 2,
-      "notes": "Swap Starport reactor production to Vikings, 4-6 Vikings minimum."
+      "priority": 3,
+      "notes": "Reactor Starport pumps Vikings, target Colossus first."
     },
     {
       "trigger": "tempest_or_carrier",
       "response": "build_vikings",
-      "priority": 3,
-      "notes": "Mass Viking + Ghost EMP if available."
+      "priority": 4,
+      "notes": "Mass Viking, add Ghost for EMP on capital ships."
     },
     {
       "trigger": "fast_expand",
       "response": "pressure_with_stim_timing",
-      "priority": 1,
-      "notes": "Hit ~7:30 with stim + 2 Medivacs before Colossus/Disruptor lands."
+      "priority": 2,
+      "notes": "Hit ~7:30 with stim + 2 Medivacs before Colossus/Disruptor."
     }
   ]
 }
