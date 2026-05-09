@@ -39,6 +39,18 @@ DEFEND_SUPPLY = 2
 # How often (in game-seconds) to emit a strategy status log line. Avoids
 # spamming once-per-step but gives us enough signal to diagnose army flow.
 LOG_INTERVAL_SECONDS = 30.0
+DIAG_INTERVAL_SECONDS = 15.0  # tighter cadence for production diagnostics
+
+# Production / economy structures we count when diagnosing stalls.
+TERRAN_PRODUCTION_NAMES: tuple[str, ...] = (
+    "BARRACKS", "FACTORY", "STARPORT",
+)
+TERRAN_TECHLAB_NAMES: tuple[str, ...] = (
+    "BARRACKSTECHLAB", "FACTORYTECHLAB", "STARPORTTECHLAB",
+)
+TERRAN_REACTOR_NAMES: tuple[str, ...] = (
+    "BARRACKSREACTOR", "FACTORYREACTOR", "STARPORTREACTOR",
+)
 
 # Approximate supply costs for fast army-supply summation. Static table is
 # faster than calling calculate_supply_cost per unit per step.
@@ -154,11 +166,20 @@ def update(bot: "AresBot", playbook: dict[str, Any] | None) -> None:
         return
 
     # Continuous unit production toward target composition.
+    # `freeflow_mode=True` is intentional for v0: SpawnController's proportion
+    # mode breaks out of the queue loop the moment it can't afford the next
+    # priority unit. With a gas-cost unit (Reaper, Marauder) high in the
+    # priority list and sub-50 gas income, that means cheap Marines NEVER
+    # queue from idle Barracks even when sitting on 4000+ minerals. Freeflow
+    # spends resources on whatever is buildable, ignoring proportions —
+    # exactly what a v0 bot needs while production scales.
     try:
         from ares.behaviors.macro.spawn_controller import SpawnController
         from ares.behaviors.macro.production_controller import ProductionController
 
-        bot.register_behavior(SpawnController(army_composition_dict=ares_comp))
+        bot.register_behavior(
+            SpawnController(army_composition_dict=ares_comp, freeflow_mode=True)
+        )
         bot.register_behavior(
             ProductionController(
                 army_composition_dict=ares_comp,
@@ -190,6 +211,7 @@ def update(bot: "AresBot", playbook: dict[str, Any] | None) -> None:
 
     # Periodic status log so we can diagnose without watching every frame.
     _log_status_periodically(bot, phase, a_supply, attacking, target, len(units))
+    _log_production_diagnostics(bot)
 
 
 def _log_status_periodically(
@@ -215,3 +237,81 @@ def _log_status_periodically(
         f"army={a_supply}/{ATTACK_SUPPLY} ({state}) target={target_str} "
         f"unit_count={unit_count}"
     )
+
+
+def _log_production_diagnostics(bot: "AresBot") -> None:
+    """Per-DIAG_INTERVAL_SECONDS dump of production-pipeline state. Tells
+    us where the bot is stalling: supply blocked, no idle production, no
+    workers, low income, etc. Reads stdlib python-sc2 attributes only —
+    safe to call every step (rate-limited internally)."""
+    now = float(getattr(bot, "time", 0.0))
+    last = float(getattr(bot, "_last_prod_log_time", -DIAG_INTERVAL_SECONDS))
+    if now - last < DIAG_INTERVAL_SECONDS:
+        return
+    bot._last_prod_log_time = now  # type: ignore[attr-defined]
+
+    try:
+        from sc2.ids.unit_typeid import UnitTypeId
+    except ImportError:
+        return
+
+    structures = getattr(bot, "structures", None)
+    workers = getattr(bot, "workers", None)
+    if structures is None or workers is None:
+        return
+
+    # Production buildings, by readiness + idleness.
+    prod_summary: list[str] = []
+    total_idle_prod = 0
+    for name in TERRAN_PRODUCTION_NAMES:
+        try:
+            uid = UnitTypeId[name]
+        except KeyError:
+            continue
+        all_of = structures(uid)
+        ready = [s for s in all_of if s.is_ready]
+        idle = [s for s in ready if s.is_idle]
+        total_idle_prod += len(idle)
+        if all_of:
+            prod_summary.append(f"{name.lower()}={len(ready)}/{len(all_of)}(idle={len(idle)})")
+
+    # Addons (tech-tier indicators).
+    addons: list[str] = []
+    for name in TERRAN_TECHLAB_NAMES + TERRAN_REACTOR_NAMES:
+        try:
+            uid = UnitTypeId[name]
+        except KeyError:
+            continue
+        n = len([s for s in structures(uid) if s.is_ready])
+        if n:
+            addons.append(f"{name.lower()}={n}")
+
+    # Worker accounting.
+    n_workers = len(workers)
+    n_idle_workers = len([w for w in workers if w.is_idle])
+
+    minerals = int(getattr(bot, "minerals", 0))
+    vespene = int(getattr(bot, "vespene", 0))
+    supply_used = int(getattr(bot, "supply_used", 0))
+    supply_cap = int(getattr(bot, "supply_cap", 0))
+    supply_left = int(getattr(bot, "supply_left", 0))
+
+    # Supply-blocked is one of the most common production stalls.
+    supply_blocked = supply_left == 0 and supply_cap < 200
+
+    parts = [
+        f"prod t={now:05.1f}s",
+        f"min={minerals} gas={vespene}",
+        f"supply={supply_used}/{supply_cap}({supply_left} left)",
+        f"workers={n_workers}({n_idle_workers} idle)",
+    ]
+    if prod_summary:
+        parts.append("buildings: " + " ".join(prod_summary))
+    if addons:
+        parts.append("addons: " + " ".join(addons))
+    if supply_blocked:
+        parts.append("[SUPPLY-BLOCKED]")
+    if total_idle_prod > 0 and minerals >= 50 and supply_left > 0:
+        parts.append(f"[IDLE-PROD {total_idle_prod}]")
+
+    logger.info(" | ".join(parts))
