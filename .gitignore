@@ -39,6 +39,8 @@ strategist/output/replays/
 sc2_stdout.log
 sc2_stderr.log
 last_run.log
+last_run_full.log
+*.log
 
 # Submission ZIPs
 *.zip
