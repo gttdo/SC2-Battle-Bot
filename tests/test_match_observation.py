@@ -8,10 +8,22 @@ from bot import match_observation
 
 
 def test_records_first_seen_structure_only():
+    """Recorder stores UPPERCASE — that's what python-sc2's UnitTypeId.name
+    returns at the actual main.py call site. Earlier tests passed the
+    PascalCase form 'SpawningPool' and silently never matched in production;
+    we now normalize on input so either form lands the same."""
     rec = match_observation.Recorder(map_name="Equilibrium LE")
+    rec.see_enemy_structure("SPAWNINGPOOL", our_supply=18)
+    rec.see_enemy_structure("SPAWNINGPOOL", our_supply=22)  # later sighting; ignored
+    assert rec.key_buildings_seen == {"SPAWNINGPOOL": 18}
+
+
+def test_pascal_case_input_is_normalized_to_uppercase():
+    """Old call sites that passed PascalCase shouldn't silently miss
+    anymore — regression guard for the bug found post-strategist."""
+    rec = match_observation.Recorder()
     rec.see_enemy_structure("SpawningPool", our_supply=18)
-    rec.see_enemy_structure("SpawningPool", our_supply=22)  # later sighting; ignored
-    assert rec.key_buildings_seen == {"SpawningPool": 18}
+    assert rec.key_buildings_seen == {"SPAWNINGPOOL": 18}
 
 
 def test_ignores_unknown_structure_names():
@@ -22,12 +34,12 @@ def test_ignores_unknown_structure_names():
 
 def test_first_tech_structure_picks_priority_order():
     rec = match_observation.Recorder()
-    rec.see_enemy_structure("Hatchery", our_supply=14)
-    rec.see_enemy_structure("RoachWarren", our_supply=22)
-    rec.see_enemy_structure("HydraliskDen", our_supply=30)
+    rec.see_enemy_structure("HATCHERY", our_supply=14)
+    rec.see_enemy_structure("ROACHWARREN", our_supply=22)
+    rec.see_enemy_structure("HYDRALISKDEN", our_supply=30)
     name, supply = rec.first_tech_structure()
     # RoachWarren ranks higher in the tech priority than HydraliskDen.
-    assert name == "RoachWarren"
+    assert name == "ROACHWARREN"
     assert supply == 22
 
 
@@ -41,8 +53,8 @@ def test_first_attack_is_recorded_only_once():
 
 def test_to_observation_shape_matches_schema():
     rec = match_observation.Recorder(map_name="Babylon LE")
-    rec.see_enemy_structure("SpawningPool", our_supply=17)
-    rec.see_enemy_structure("RoachWarren", our_supply=22)
+    rec.see_enemy_structure("SPAWNINGPOOL", our_supply=17)
+    rec.see_enemy_structure("ROACHWARREN", our_supply=22)
     rec.record_first_attack(285.0, {"Roach": 7, "Zergling": 4})
     rec.reactions_fired = ["mass_roach"]
     rec.critical_event = "engaged_below_critical_mass"
@@ -61,8 +73,8 @@ def test_to_observation_shape_matches_schema():
     assert obs["timestamp"] == "2026-05-08T14:00:00Z"
 
     opening = obs["their_opening"]
-    assert opening["key_buildings_seen"] == {"SpawningPool": 17, "RoachWarren": 22}
-    assert opening["first_tech_structure"] == "RoachWarren"
+    assert opening["key_buildings_seen"] == {"SPAWNINGPOOL": 17, "ROACHWARREN": 22}
+    assert opening["first_tech_structure"] == "ROACHWARREN"
 
     attack = obs["their_first_attack"]
     assert attack["seconds"] == 285.0

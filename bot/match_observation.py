@@ -23,28 +23,30 @@ from typing import Any
 logger = logging.getLogger(__name__)
 
 
-# UnitTypeId names (PascalCase strings — we match by string, not enum, so
-# we don't have to import python-sc2). The recorder samples the FIRST time
-# we ever see each of these, paired with our supply.
+# UnitTypeId names. python-sc2's enum is UPPERCASE (e.g.
+# UnitTypeId.PYLON.name == "PYLON"), so we store and compare in UPPERCASE
+# for direct equality with what the bot passes in via
+# `unit.type_id.name`. The recorder samples the FIRST time we ever see
+# each of these, paired with our supply.
 KEY_BUILDINGS_TO_TRACK: tuple[str, ...] = (
     # Zerg
-    "Hatchery", "SpawningPool", "Extractor", "RoachWarren", "BanelingNest",
-    "HydraliskDen", "Spire", "InfestationPit", "UltraliskCavern",
+    "HATCHERY", "SPAWNINGPOOL", "EXTRACTOR", "ROACHWARREN", "BANELINGNEST",
+    "HYDRALISKDEN", "SPIRE", "INFESTATIONPIT", "ULTRALISKCAVERN",
     # Terran
-    "CommandCenter", "SupplyDepot", "Barracks", "Refinery", "Factory",
-    "Starport", "Armory", "BarracksTechLab", "FactoryTechLab", "StarportTechLab",
+    "COMMANDCENTER", "SUPPLYDEPOT", "BARRACKS", "REFINERY", "FACTORY",
+    "STARPORT", "ARMORY", "BARRACKSTECHLAB", "FACTORYTECHLAB", "STARPORTTECHLAB",
     # Protoss
-    "Nexus", "Pylon", "Gateway", "Assimilator", "CyberneticsCore",
-    "TwilightCouncil", "RoboticsFacility", "Stargate", "DarkShrine",
+    "NEXUS", "PYLON", "GATEWAY", "ASSIMILATOR", "CYBERNETICSCORE",
+    "TWILIGHTCOUNCIL", "ROBOTICSFACILITY", "STARGATE", "DARKSHRINE",
 )
 
 # A subset that's especially meaningful as "first tech structure" — the
 # scouting moment that telegraphs which strategy the opponent is committing
 # to. Order matters: first match wins.
 TECH_STRUCTURES_PRIORITY: tuple[str, ...] = (
-    "RoachWarren", "BanelingNest", "Spire", "InfestationPit", "HydraliskDen",
-    "UltraliskCavern", "BarracksTechLab", "FactoryTechLab", "StarportTechLab",
-    "Armory", "TwilightCouncil", "RoboticsFacility", "Stargate", "DarkShrine",
+    "ROACHWARREN", "BANELINGNEST", "SPIRE", "INFESTATIONPIT", "HYDRALISKDEN",
+    "ULTRALISKCAVERN", "BARRACKSTECHLAB", "FACTORYTECHLAB", "STARPORTTECHLAB",
+    "ARMORY", "TWILIGHTCOUNCIL", "ROBOTICSFACILITY", "STARGATE", "DARKSHRINE",
 )
 
 
@@ -75,15 +77,21 @@ class Recorder:
     def see_enemy_structure(self, structure_name: str, our_supply: int) -> None:
         """Call from on_step / on_unit_destroyed / on_enemy_unit_entered_vision
         whenever we learn about an enemy structure. First write wins; later
-        sightings are no-ops."""
-        if structure_name not in KEY_BUILDINGS_TO_TRACK:
+        sightings are no-ops.
+
+        Normalizes the input name to UPPERCASE — python-sc2's
+        UnitTypeId.X.name returns UPPERCASE, but callers may pass
+        PascalCase from older code or tests. Either form lands the same
+        key in the recorder."""
+        normalized = structure_name.upper() if structure_name else ""
+        if normalized not in KEY_BUILDINGS_TO_TRACK:
             return
-        if structure_name in self.key_buildings_seen:
+        if normalized in self.key_buildings_seen:
             return
-        self.key_buildings_seen[structure_name] = our_supply
+        self.key_buildings_seen[normalized] = our_supply
         logger.debug(
             "match_observation: first %s seen at our supply %d",
-            structure_name, our_supply,
+            normalized, our_supply,
         )
 
     def record_first_attack(self, time_seconds: float, composition: dict[str, int]) -> None:
