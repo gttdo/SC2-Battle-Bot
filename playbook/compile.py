@@ -100,6 +100,35 @@ def upgrade_to_ares_command(target: str, race: str) -> str:
         return aliases[target]
     return target.lower()
 
+
+def is_researchable_upgrade(target: str, race: str) -> bool:
+    """Return True if `target` resolves to an UpgradeId that is actually
+    researchable in modern SC2 — i.e. it's in UPGRADE_RESEARCHED_FROM.
+
+    Some legacy entries on UpgradeId (e.g. SIEGETECH) exist in the enum
+    but aren't researchable in the current game (Siege Mode is auto-
+    available with the Tech Lab). ares's BuildOrderParser crashes with
+    AssertionError ('Unrecognized build order command') when it tries to
+    schedule research for these, taking down the bot at game start.
+
+    Lazy-imports python-sc2 so the compiler module imports cleanly in
+    environments that don't have it installed (tests, CI). Returns True
+    on import failure to avoid false negatives blocking runs."""
+    try:
+        from sc2.dicts.upgrade_researched_from import UPGRADE_RESEARCHED_FROM
+        from sc2.ids.upgrade_id import UpgradeId
+    except ImportError:
+        return True
+
+    aliases = UPGRADE_ALIASES_BY_RACE.get(race, {})
+    resolved_lower = aliases.get(target, target.lower())
+    enum_key = resolved_lower.upper()
+    try:
+        upgrade_id = UpgradeId[enum_key]
+    except KeyError:
+        return False
+    return upgrade_id in UPGRADE_RESEARCHED_FROM
+
 # Map our matchup labels to the bot's race so a single playbook file is enough
 # to infer which alias table to use without extra CLI flags.
 MATCHUP_TO_RACE: dict[str, str] = {
@@ -165,6 +194,12 @@ def _step_to_command(step: dict, supply: int, race: str) -> str | None:
     if kind == "produce":
         cmd = f"{supply} {target_to_ares_command(target, race)}"
     elif kind == "research":
+        if not is_researchable_upgrade(target, race):
+            # Drop the step rather than emit a command ares's parser will
+            # crash on. The caller (compile_one_playbook) collects skipped
+            # steps into a sibling `notes` field so the user can see what
+            # was dropped without bringing down the bot.
+            return None
         cmd = f"{supply} {upgrade_to_ares_command(target, race)}"
     elif kind == "expand":
         cmd = f"{supply} expand"
@@ -224,7 +259,10 @@ def compile_one_playbook(playbook: dict, race: str | None = None) -> dict:
 
         cmd = _step_to_command(step, supply, race)
         if cmd is None:
-            notes.append(f"SKIPPED unsupported kind: {step['action']}")
+            notes.append(
+                f"SKIPPED non-researchable / unsupported step: "
+                f"{step['action']['kind']} {step['action']['target']}"
+            )
             continue
 
         condition_note = ""

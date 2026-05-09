@@ -52,6 +52,57 @@ def test_upgrade_aliases_translate_display_names_to_enum_names():
     assert upgrade_to_ares_command("TerranInfantryWeaponsLevel1", "Terran") == "terraninfantryweaponslevel1"
 
 
+def test_is_researchable_upgrade_validates_against_upgrade_researched_from():
+    """Regression for the SiegeTech crash. UpgradeId.SIEGETECH exists in
+    the enum but isn't in UPGRADE_RESEARCHED_FROM (Siege Mode is auto-
+    available in modern SC2, not a research step), so ares crashes when
+    a build order tries to schedule it. Compiler must catch this."""
+    from playbook.compile import is_researchable_upgrade
+
+    # Real, researchable Terran upgrades — all should pass
+    assert is_researchable_upgrade("Stimpack", "Terran") is True
+    assert is_researchable_upgrade("CombatShield", "Terran") is True  # via alias
+    assert is_researchable_upgrade("ShieldWall", "Terran") is True   # direct enum name
+    assert is_researchable_upgrade("TerranInfantryWeaponsLevel1", "Terran") is True
+
+    # SiegeTech is in the enum but not researchable — this is the bug
+    assert is_researchable_upgrade("SiegeTech", "Terran") is False
+
+    # Garbage name — should also be False (no enum entry)
+    assert is_researchable_upgrade("MadeUpUpgrade", "Terran") is False
+
+
+def test_compile_drops_non_researchable_research_step():
+    """End-to-end: a research step targeting a non-researchable upgrade
+    (SiegeTech) must NOT appear in OpeningBuildOrder. The skipped step
+    should land in `notes` for visibility."""
+    pb = {
+        "metadata": {
+            "schema_version": "0.2", "matchup": "TvT",
+            "generated_at": "2026-01-01T00:00:00Z", "generator": "test",
+        },
+        "build_order": [
+            {"trigger": {"supply": 14}, "action": {"kind": "produce", "target": "SupplyDepot"}},
+            {"trigger": {"supply": 30}, "action": {"kind": "research", "target": "SiegeTech"}},
+            {"trigger": {"supply": 35}, "action": {"kind": "research", "target": "Stimpack"}},
+        ],
+        "composition_targets": {"early": {"Marine": 1.0}, "mid": {"Marine": 1.0}, "late": {"Marine": 1.0}},
+        "macro_rules": {
+            "worker_cap": 22, "gas_workers_per_geyser": 3,
+            "supply_buffer_pct": 0.15, "max_bases": 3,
+        },
+    }
+    build = compile_one_playbook(pb, race="Terran")
+    opening = build["OpeningBuildOrder"]
+
+    # SiegeTech dropped, Stimpack kept
+    assert not any("siegetech" in line.lower() for line in opening)
+    assert any("stimpack" in line.lower() for line in opening)
+
+    # The skipped step is recorded in notes for visibility
+    assert any("SiegeTech" in note for note in build.get("notes", []))
+
+
 def test_compile_translates_combat_shield_in_research_step():
     """End-to-end: a research step with target=CombatShield should emit
     `<supply> shieldwall` in OpeningBuildOrder, not `<supply> combatshield`.

@@ -113,7 +113,6 @@ Builds:
     - 36 supply
     - 38 factorytechlab
     - 42 marine x2
-    - 44 siegetech
     - 46 barrackstechlab
     - 48 barracks
     - 50 engineeringbay
@@ -130,3 +129,5 @@ Builds:
     - 90 armory
     - 100 terraninfantryweaponslevel2
     - 110 terraninfantryarmorslevel2
+    notes:
+    - 'SKIPPED non-researchable / unsupported step: research SiegeTech'
