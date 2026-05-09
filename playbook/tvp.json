@@ -1,0 +1,405 @@
+{
+  "metadata": {
+    "schema_version": "1.0",
+    "matchup": "TvP",
+    "generated_at": "2026-05-09T05:13:38+00:00",
+    "generator": "opus-4-7-tvp-r1",
+    "source_replays": 3,
+    "notes": "0% winrate prior. Their first attack ~644s (10:45) \u2014 typical Protoss timing (Stalker/Immortal/Sentry or Blink). Goals: faster Stim+Shield, earlier Medivacs (~7:00), 3CC up before their push, Tanks for splash vs gateway, Vikings for Colossus/Tempest. Defensive bunker at natural ramp, Engineering Bay turrets vs DT/Oracle."
+  },
+  "build_order": [
+    {
+      "trigger": {
+        "supply": 14
+      },
+      "action": {
+        "kind": "produce",
+        "target": "SupplyDepot"
+      }
+    },
+    {
+      "trigger": {
+        "supply": 16
+      },
+      "action": {
+        "kind": "produce",
+        "target": "Barracks"
+      }
+    },
+    {
+      "trigger": {
+        "supply": 16
+      },
+      "action": {
+        "kind": "produce",
+        "target": "Refinery"
+      }
+    },
+    {
+      "trigger": {
+        "supply": 19
+      },
+      "action": {
+        "kind": "expand",
+        "target": "CommandCenter"
+      }
+    },
+    {
+      "trigger": {
+        "supply": 20
+      },
+      "action": {
+        "kind": "produce",
+        "target": "Reaper"
+      }
+    },
+    {
+      "trigger": {
+        "supply": 21
+      },
+      "action": {
+        "kind": "produce",
+        "target": "OrbitalCommand"
+      }
+    },
+    {
+      "trigger": {
+        "supply": 22
+      },
+      "action": {
+        "kind": "produce",
+        "target": "Factory"
+      }
+    },
+    {
+      "trigger": {
+        "supply": 23
+      },
+      "action": {
+        "kind": "produce",
+        "target": "SupplyDepot"
+      }
+    },
+    {
+      "trigger": {
+        "supply": 24
+      },
+      "action": {
+        "kind": "produce",
+        "target": "Refinery"
+      }
+    },
+    {
+      "trigger": {
+        "supply": 26
+      },
+      "action": {
+        "kind": "produce",
+        "target": "Marine",
+        "count": 2
+      }
+    },
+    {
+      "trigger": {
+        "on": "factory_complete"
+      },
+      "action": {
+        "kind": "produce",
+        "target": "Starport"
+      }
+    },
+    {
+      "trigger": {
+        "supply": 30
+      },
+      "action": {
+        "kind": "produce",
+        "target": "Barracks",
+        "count": 2
+      }
+    },
+    {
+      "trigger": {
+        "supply": 32
+      },
+      "action": {
+        "kind": "produce",
+        "target": "BarracksTechLab"
+      }
+    },
+    {
+      "trigger": {
+        "supply": 33
+      },
+      "action": {
+        "kind": "produce",
+        "target": "OrbitalCommand"
+      }
+    },
+    {
+      "trigger": {
+        "supply": 34
+      },
+      "action": {
+        "kind": "produce",
+        "target": "SupplyDepot"
+      }
+    },
+    {
+      "trigger": {
+        "supply": 35
+      },
+      "action": {
+        "kind": "research",
+        "target": "Stimpack"
+      }
+    },
+    {
+      "trigger": {
+        "on": "starport_complete"
+      },
+      "action": {
+        "kind": "produce",
+        "target": "StarportReactor"
+      }
+    },
+    {
+      "trigger": {
+        "supply": 38
+      },
+      "action": {
+        "kind": "produce",
+        "target": "FactoryTechLab"
+      }
+    },
+    {
+      "trigger": {
+        "supply": 40
+      },
+      "action": {
+        "kind": "research",
+        "target": "ShieldWall"
+      }
+    },
+    {
+      "trigger": {
+        "supply": 42
+      },
+      "action": {
+        "kind": "produce",
+        "target": "EngineeringBay"
+      }
+    },
+    {
+      "trigger": {
+        "supply": 44
+      },
+      "action": {
+        "kind": "produce",
+        "target": "Medivac",
+        "count": 2
+      }
+    },
+    {
+      "trigger": {
+        "supply": 48
+      },
+      "action": {
+        "kind": "produce",
+        "target": "SiegeTank",
+        "count": 2
+      }
+    },
+    {
+      "trigger": {
+        "supply": 52
+      },
+      "action": {
+        "kind": "expand",
+        "target": "CommandCenter"
+      }
+    },
+    {
+      "trigger": {
+        "supply": 56
+      },
+      "action": {
+        "kind": "produce",
+        "target": "SupplyDepot",
+        "count": 2
+      }
+    },
+    {
+      "trigger": {
+        "supply": 58
+      },
+      "action": {
+        "kind": "research",
+        "target": "TerranInfantryWeaponsLevel1"
+      }
+    },
+    {
+      "trigger": {
+        "supply": 60
+      },
+      "action": {
+        "kind": "produce",
+        "target": "Barracks",
+        "count": 2
+      }
+    },
+    {
+      "trigger": {
+        "supply": 64
+      },
+      "action": {
+        "kind": "produce",
+        "target": "BarracksTechLab"
+      }
+    },
+    {
+      "trigger": {
+        "supply": 70
+      },
+      "action": {
+        "kind": "research",
+        "target": "TerranInfantryArmorsLevel1"
+      }
+    },
+    {
+      "trigger": {
+        "supply": 74
+      },
+      "action": {
+        "kind": "produce",
+        "target": "Armory"
+      }
+    },
+    {
+      "trigger": {
+        "supply": 80
+      },
+      "action": {
+        "kind": "produce",
+        "target": "EngineeringBay"
+      }
+    },
+    {
+      "trigger": {
+        "supply": 84
+      },
+      "action": {
+        "kind": "produce",
+        "target": "OrbitalCommand"
+      }
+    },
+    {
+      "trigger": {
+        "supply": 90
+      },
+      "action": {
+        "kind": "produce",
+        "target": "Starport"
+      }
+    },
+    {
+      "trigger": {
+        "supply": 100
+      },
+      "action": {
+        "kind": "research",
+        "target": "TerranInfantryWeaponsLevel2"
+      }
+    },
+    {
+      "trigger": {
+        "supply": 102
+      },
+      "action": {
+        "kind": "research",
+        "target": "TerranInfantryArmorsLevel2"
+      }
+    },
+    {
+      "trigger": {
+        "supply": 110
+      },
+      "action": {
+        "kind": "expand",
+        "target": "CommandCenter"
+      }
+    }
+  ],
+  "composition_targets": {
+    "early": {
+      "Marine": 0.7,
+      "Reaper": 0.15,
+      "SiegeTank": 0.15
+    },
+    "mid": {
+      "Marine": 0.5,
+      "Marauder": 0.2,
+      "Medivac": 0.15,
+      "SiegeTank": 0.1,
+      "Viking": 0.05
+    },
+    "late": {
+      "Marine": 0.4,
+      "Marauder": 0.25,
+      "Medivac": 0.15,
+      "SiegeTank": 0.1,
+      "Viking": 0.07,
+      "Ghost": 0.03
+    }
+  },
+  "macro_rules": {
+    "worker_cap": 70,
+    "gas_workers_per_geyser": 3,
+    "supply_buffer_pct": 0.08,
+    "max_bases": 4
+  },
+  "reactions": [
+    {
+      "trigger": "dt_rush",
+      "response": "build_turrets_and_raven",
+      "priority": 3,
+      "notes": "Engineering Bay -> 2 turrets per base, scan, accelerate Starport for Raven."
+    },
+    {
+      "trigger": "oracle_harass",
+      "response": "build_turrets_and_raven",
+      "priority": 3,
+      "notes": "Pull marines under turrets, prioritize EBay + missile turrets at mineral lines."
+    },
+    {
+      "trigger": "proxy_gateway",
+      "response": "wall_off_at_natural",
+      "priority": 4,
+      "notes": "Bunker at natural, pull SCVs if Zealots arrive before Marines."
+    },
+    {
+      "trigger": "blink_stalkers",
+      "response": "tech_to_marauder",
+      "priority": 2,
+      "notes": "Push Concussive + Marauder count, hold high ground with tanks."
+    },
+    {
+      "trigger": "colossus",
+      "response": "build_vikings",
+      "priority": 2,
+      "notes": "Swap Starport reactor production to Vikings, 4-6 Vikings minimum."
+    },
+    {
+      "trigger": "tempest_or_carrier",
+      "response": "build_vikings",
+      "priority": 3,
+      "notes": "Mass Viking + Ghost EMP if available."
+    },
+    {
+      "trigger": "fast_expand",
+      "response": "pressure_with_stim_timing",
+      "priority": 1,
+      "notes": "Hit ~7:30 with stim + 2 Medivacs before Colossus/Disruptor lands."
+    }
+  ]
+}

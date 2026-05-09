@@ -5,7 +5,7 @@ BuildChoices:
   Protoss:
     BotName: SC2Agent_vProtoss
     Cycle:
-    - TvZ
+    - TvP
   Terran:
     BotName: SC2Agent_vTerran
     Cycle:
@@ -48,3 +48,42 @@ Builds:
     - 54 widowmine x2
     notes:
     - 'NOTE conditional step (runtime-only): 44 marine x4 skip_if=ling_flood'
+  TvP:
+    AutoSupplyAtSupply: 0
+    ConstantWorkerProductionTill: 70
+    OpeningBuildOrder:
+    - 14 supply
+    - 16 barracks
+    - 16 gas
+    - 19 expand
+    - 20 reaper
+    - 21 orbital
+    - 22 factory
+    - 23 supply
+    - 24 gas
+    - 24 starport
+    - 26 marine x2
+    - 26 starportreactor
+    - 30 barracks x2
+    - 32 barrackstechlab
+    - 33 orbital
+    - 34 supply
+    - 35 stimpack
+    - 38 factorytechlab
+    - 40 shieldwall
+    - 42 engineeringbay
+    - 44 medivac x2
+    - 48 siegetank x2
+    - 52 expand
+    - 56 supply x2
+    - 58 terraninfantryweaponslevel1
+    - 60 barracks x2
+    - 64 barrackstechlab
+    - 70 terraninfantryarmorslevel1
+    - 74 armory
+    - 80 engineeringbay
+    - 84 orbital
+    - 90 starport
+    - 100 terraninfantryweaponslevel2
+    - 102 terraninfantryarmorslevel2
+    - 110 expand

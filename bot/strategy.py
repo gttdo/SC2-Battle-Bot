@@ -29,10 +29,23 @@ if TYPE_CHECKING:
 EARLY_END_SUPPLY = 50
 MID_END_SUPPLY = 120
 
-# Army state-machine thresholds (combat-unit supply). With home-defense
-# wired in (units recall to threats), we can be patient about pushing —
-# 25 supply is ~12 marines + 4 marauders + medivac, a real first push.
-ATTACK_SUPPLY = 25
+# Army state-machine thresholds (combat-unit supply).
+#
+# v0 played at ATTACK_SUPPLY=25 and lost the all-in-then-die pattern the
+# user flagged: bot pushed at exactly 25, traded the entire army, then sat
+# at 0 supply while the enemy reinforced. Two changes here:
+#
+#   1. ATTACK_SUPPLY raised to 50 — push only with a real combat army
+#      (~25 marines + 8 marauders + 2 medivacs). Below that, we keep
+#      macro'ing.
+#   2. Hysteresis via RETREAT_SUPPLY: once attacking, stay attacking
+#      until the army drops below RETREAT_SUPPLY. That way a lost
+#      engagement doesn't reset us to HOLD before reinforcements arrive
+#      at the front. Combined with the freeflow SpawnController (which
+#      keeps producing units toward composition_targets), new units
+#      naturally rally toward whatever the current attack target is.
+ATTACK_SUPPLY = 50
+RETREAT_SUPPLY = 20
 DEFEND_SUPPLY = 5
 
 # How close an enemy combat unit must be to one of our townhalls before
@@ -213,6 +226,31 @@ def hold_position(bot: "AresBot") -> "Point2":
     return bot.start_location
 
 
+def decide_army_state(
+    *,
+    threat_present: bool,
+    army_supply_value: int,
+    prev_state: str,
+) -> str:
+    """Pure: pick army state from current threat / supply / previous state.
+
+    Threat always wins. Otherwise: if we WERE attacking and still have a
+    workable army, keep attacking (hysteresis — don't bounce to HOLD on a
+    lost engagement). Otherwise commit to ATTACK only if we cross the
+    full attack threshold; HOLD by default.
+
+    Pure function so we can verify the state transitions with mock data
+    instead of having to spin up an AresBot. Same logic the live bot
+    runs in update()."""
+    if threat_present:
+        return "DEFEND"
+    if prev_state == "ATTACK" and army_supply_value >= RETREAT_SUPPLY:
+        return "ATTACK"
+    if army_supply_value >= ATTACK_SUPPLY:
+        return "ATTACK"
+    return "HOLD"
+
+
 def find_threat(bot: "AresBot") -> "Point2 | None":
     """Return the position of the nearest enemy combat unit threatening one
     of our townhalls, or None if no threat. 'Threat' = an enemy unit that
@@ -354,23 +392,32 @@ def update(bot: "AresBot", playbook: dict[str, Any] | None) -> None:
     except Exception:  # pragma: no cover — never crash the bot from strategy
         logger.exception("strategy: macro behavior register failed")
 
-    # Army control: 3-state decision — DEFEND beats ATTACK beats HOLD.
-    # Defense always wins: if anything threatens our bases, the entire army
-    # collapses to that point regardless of attack threshold. Without this
-    # the bot pushed all-in and lost its base to a counter-attack.
+    # Army control: 3-state decision with hysteresis.
+    # DEFEND > ATTACK > HOLD, but once we ENTER attack we stay in attack
+    # until the army drops below RETREAT_SUPPLY. This is the reinforcement
+    # fix: prior version bounced back to HOLD on the first lost engagement,
+    # leaving the front empty while the enemy reinforced. Now the bot
+    # holds the line at lower supply, and SpawnController's continuous
+    # production rallies new units toward the active attack target.
     units = army_units(bot)
     a_supply = army_supply(units)
 
     threat_pos = find_threat(bot)
-    if threat_pos is not None:
-        state = "DEFEND"
-        target = threat_pos
-    elif a_supply >= ATTACK_SUPPLY:
-        state = "ATTACK"
+    prev_state = getattr(bot, "_strategy_state", "HOLD")
+
+    state = decide_army_state(
+        threat_present=threat_pos is not None,
+        army_supply_value=a_supply,
+        prev_state=prev_state,
+    )
+    if state == "DEFEND":
+        target = threat_pos  # threat_pos is guaranteed not-None here
+    elif state == "ATTACK":
         target = attack_target(bot)
     else:
-        state = "HOLD"
         target = hold_position(bot)
+
+    bot._strategy_state = state  # type: ignore[attr-defined]
 
     if units:
         try:

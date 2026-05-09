@@ -113,6 +113,94 @@ def test_army_supply_from_unit_names_unknown_defaults_to_one():
 
 
 def test_army_supply_thresholds_are_consistent():
-    """Sanity check that DEFEND_SUPPLY < ATTACK_SUPPLY so we don't push
-    when we should be pulling back."""
-    assert strategy.DEFEND_SUPPLY < strategy.ATTACK_SUPPLY
+    """Sanity check ordering: DEFEND < RETREAT < ATTACK. If RETREAT
+    crossed ATTACK we'd never enter the hysteresis branch; if DEFEND
+    crossed RETREAT we'd contradict the layering."""
+    assert strategy.DEFEND_SUPPLY < strategy.RETREAT_SUPPLY < strategy.ATTACK_SUPPLY
+
+
+# ---------------------------------------------------------------------------
+# decide_army_state — hysteresis state machine
+# ---------------------------------------------------------------------------
+
+def test_decide_state_threat_always_defends():
+    """Threat present beats every other state."""
+    state = strategy.decide_army_state(
+        threat_present=True, army_supply_value=200, prev_state="ATTACK",
+    )
+    assert state == "DEFEND"
+
+
+def test_decide_state_threat_defends_even_with_no_army():
+    state = strategy.decide_army_state(
+        threat_present=True, army_supply_value=0, prev_state="HOLD",
+    )
+    assert state == "DEFEND"
+
+
+def test_decide_state_fresh_attack_at_threshold():
+    """No prior attack, army at ATTACK_SUPPLY -> commit to attack."""
+    state = strategy.decide_army_state(
+        threat_present=False,
+        army_supply_value=strategy.ATTACK_SUPPLY,
+        prev_state="HOLD",
+    )
+    assert state == "ATTACK"
+
+
+def test_decide_state_below_attack_threshold_holds():
+    """No prior attack, army below ATTACK_SUPPLY -> hold and macro."""
+    state = strategy.decide_army_state(
+        threat_present=False,
+        army_supply_value=strategy.ATTACK_SUPPLY - 1,
+        prev_state="HOLD",
+    )
+    assert state == "HOLD"
+
+
+def test_decide_state_hysteresis_keeps_attacking_above_retreat():
+    """The reinforcement fix: once attacking, KEEP attacking even if
+    army has dropped below ATTACK_SUPPLY, as long as we're above
+    RETREAT_SUPPLY. This is what was broken — bot would bounce to HOLD
+    after a lost engagement at army=24, leaving the front empty."""
+    state = strategy.decide_army_state(
+        threat_present=False,
+        army_supply_value=strategy.RETREAT_SUPPLY + 1,
+        prev_state="ATTACK",
+    )
+    assert state == "ATTACK"
+
+
+def test_decide_state_hysteresis_releases_below_retreat():
+    """Stop attacking once army really drops — let it rebuild at home."""
+    state = strategy.decide_army_state(
+        threat_present=False,
+        army_supply_value=strategy.RETREAT_SUPPLY - 1,
+        prev_state="ATTACK",
+    )
+    assert state == "HOLD"
+
+
+def test_decide_state_hysteresis_does_not_apply_after_defend():
+    """After defending and the threat clearing, fall through to normal
+    logic (don't 'remember' an old ATTACK state from before the threat).
+    This keeps the state machine simple — no reset semantics."""
+    state = strategy.decide_army_state(
+        threat_present=False,
+        army_supply_value=strategy.RETREAT_SUPPLY + 1,
+        prev_state="DEFEND",
+    )
+    # Below ATTACK_SUPPLY and prev wasn't ATTACK -> HOLD
+    assert state == "HOLD"
+
+
+def test_decide_state_hysteresis_does_not_let_us_attack_under_retreat_from_hold():
+    """If we WEREN'T already attacking, having army at RETREAT_SUPPLY (a low
+    threshold) doesn't get us to ATTACK — we need the full ATTACK_SUPPLY
+    to commit fresh. This stops the bot from suicidal mini-attacks."""
+    state = strategy.decide_army_state(
+        threat_present=False,
+        army_supply_value=strategy.RETREAT_SUPPLY,
+        prev_state="HOLD",
+    )
+    assert state == "HOLD"
