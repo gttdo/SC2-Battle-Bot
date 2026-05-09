@@ -81,6 +81,22 @@ class SC2Agent(AresBot):
         # ---- Switch ares to the matchup-named build, with fallback -----
         self._switch_to_matchup_build()
 
+        # Diagnostic: log how many steps ares actually parsed from our YAML.
+        # If this is 0, something in compile.py is producing strings ares
+        # rejects, and the build will silently complete on the first step.
+        runner = getattr(self, "build_order_runner", None)
+        parsed = list(getattr(runner, "build_order", []) or [])
+        chosen = getattr(runner, "chosen_opening", "?")
+        logger.info(
+            "build_runner: chosen_opening=%s, parsed_steps=%d", chosen, len(parsed),
+        )
+        if parsed:
+            preview = [
+                f"{getattr(s, 'start_at_supply', '?')}@{getattr(s, 'command', '?')}"
+                for s in parsed[:6]
+            ]
+            logger.info("build_runner: first steps = %s", preview)
+
     async def on_step(self, iteration: int) -> None:
         await super().on_step(iteration)
 

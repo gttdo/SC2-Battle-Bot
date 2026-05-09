@@ -31,8 +31,14 @@ Thumbs.db
 # SC2 artifacts
 *.SC2Replay
 bot/data/
+data/
 strategist/cache/
 strategist/output/replays/
+
+# Debug captures
+sc2_stdout.log
+sc2_stderr.log
+last_run.log
 
 # Submission ZIPs
 *.zip

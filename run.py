@@ -12,6 +12,7 @@ Adapted from the ares-sc2 template, with our SC2Agent class wired up.
 
 from __future__ import annotations
 
+import os
 import platform
 import random
 import sys
@@ -22,11 +23,21 @@ from typing import List
 import yaml
 from loguru import logger
 
+# Ares-sc2 looks for both `config.yml` and `<race>_builds.yml` in
+# path.abspath(".") at import / on_before_start time. Our config and compiled
+# YAML live under bot/, so we change cwd to that directory BEFORE any ares
+# imports happen and BEFORE instantiating SC2Agent. Maps and ares-sc2 source
+# paths are resolved as absolute paths below, so chdir doesn't break them.
+_REPO_ROOT = Path(__file__).resolve().parent
+os.chdir(_REPO_ROOT / "bot")
+
 # Ares-sc2 is git-cloned alongside this project (not pip-installed). Add its
 # source dirs to sys.path BEFORE importing anything that pulls from `ares`.
-sys.path.append("ares-sc2/src/ares")
-sys.path.append("ares-sc2/src")
-sys.path.append("ares-sc2")
+# Use absolute paths so they work regardless of cwd.
+_ARES_ROOT = (_REPO_ROOT.parent / "ares-sc2").resolve()
+sys.path.append(str(_ARES_ROOT / "src" / "ares"))
+sys.path.append(str(_ARES_ROOT / "src"))
+sys.path.append(str(_ARES_ROOT))
 
 from sc2 import maps
 from sc2.data import AIBuild, Difficulty, Race
@@ -122,6 +133,54 @@ def main() -> None:
         _ = _SC2Paths.BASE  # force lazy __setup so our override isn't reset
         _SC2Paths.MAPS = Path(maps_dir)
         logger.info(f"using maps from {maps_dir}")
+
+        # python-sc2's Map class stores `relative_path` (computed from
+        # path.relative_to(Paths.MAPS)) and sends THAT to SC2. Then SC2
+        # resolves the relative path against its own dataDir/Maps — which is
+        # Program Files\Maps and will be empty if our maps live under
+        # OneDrive. Force relative_path to be absolute so SC2 receives the
+        # full path and finds the file regardless of where it lives.
+        import sc2.maps as _sc2maps
+        _orig_map_init = _sc2maps.Map.__init__
+
+        def _absolute_path_map_init(self, path):  # type: ignore[no-redef]
+            self.path = Path(path).absolute()
+            self.relative_path = self.path
+
+        _sc2maps.Map.__init__ = _absolute_path_map_init  # type: ignore[method-assign]
+
+    # SC2 startup time varies a lot (observed 7s in one run, >30s in
+    # another on the same machine). python-sc2 calls ws_connect() with an
+    # int timeout that aiohttp's TCP connector ignores — the underlying
+    # socket connect hits ~30s and the whole launch fails before SC2 is
+    # actually listening. Patch SC2Process._connect to first poll the port
+    # until SC2 binds it, THEN do the websocket handshake.
+    import asyncio as _asyncio
+    import socket as _socket
+
+    import sc2.sc2process as _sc2process
+
+    _orig_connect = _sc2process.SC2Process._connect
+
+    async def _connect_with_port_wait(self):  # type: ignore[no-redef]
+        deadline = _asyncio.get_event_loop().time() + 180.0
+        while _asyncio.get_event_loop().time() < deadline:
+            try:
+                with _socket.socket(_socket.AF_INET, _socket.SOCK_STREAM) as s:
+                    s.settimeout(1.0)
+                    s.connect(("127.0.0.1", self._port))
+                break  # port is listening — proceed to WS handshake
+            except (ConnectionRefusedError, OSError):
+                await _asyncio.sleep(0.5)
+        else:
+            raise TimeoutError(
+                f"SC2 didn't bind port {self._port} within 180s; "
+                "the binary may be hung. Try launching SC2 once via "
+                "Battle.net to warm caches, then re-run."
+            )
+        return await _orig_connect(self)
+
+    _sc2process.SC2Process._connect = _connect_with_port_wait  # type: ignore[method-assign]
 
     map_list: List[str] = []
     if maps_dir:

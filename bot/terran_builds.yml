@@ -2,8 +2,20 @@ UseData: true
 BuildSelection: Cycle
 MinGamesWinrateBased: 5
 BuildChoices:
+  Protoss:
+    BotName: SC2Agent_vProtoss
+    Cycle:
+    - TvZ
   Terran:
-    BotName: SC2Agent
+    BotName: SC2Agent_vTerran
+    Cycle:
+    - TvZ
+  Zerg:
+    BotName: SC2Agent_vZerg
+    Cycle:
+    - TvZ
+  Random:
+    BotName: SC2Agent_vRandom
     Cycle:
     - TvZ
 Builds:
@@ -27,5 +39,6 @@ Builds:
     - 30 marauder x2
     - 32 starport
     - 34 medivac
-    - '# NOTE conditional step (runtime-only): skip_if=ling_flood'
     - 36 marine x4
+    notes:
+    - 'NOTE conditional step (runtime-only): 36 marine x4 skip_if=ling_flood'

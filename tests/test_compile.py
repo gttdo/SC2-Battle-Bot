@@ -46,9 +46,43 @@ def test_compile_tvz_top_level_yaml():
 
     assert parsed["UseData"] is True
     assert parsed["BuildSelection"] == "Cycle"
-    assert parsed["BuildChoices"]["Terran"]["BotName"] == "SC2Agent"
-    assert parsed["BuildChoices"]["Terran"]["Cycle"] == ["TvZ"]
+    # BuildChoices is keyed by ENEMY race. With only a TvZ build available,
+    # all four enemy races (Protoss, Terran, Zerg, Random) should fall back
+    # to TvZ rather than be missing entirely.
+    for enemy_race in ("Protoss", "Terran", "Zerg", "Random"):
+        assert enemy_race in parsed["BuildChoices"], \
+            f"BuildChoices missing entry for vs {enemy_race}"
+        assert parsed["BuildChoices"][enemy_race]["Cycle"] == ["TvZ"]
     assert "TvZ" in parsed["Builds"]
+
+
+def test_compile_build_choices_picks_exact_matchup_when_available():
+    """When playbooks for multiple matchups exist, BuildChoices should route
+    each enemy race to its own matchup, not fall back."""
+    pb_tvz = _load(PLAYBOOK_DIR / "tvz.json")
+    pb_tvp = {  # synthetic minimal TvP playbook
+        "metadata": {
+            "schema_version": "0.2", "matchup": "TvP",
+            "generated_at": "2026-01-01T00:00:00Z", "generator": "test",
+        },
+        "build_order": [
+            {"trigger": {"supply": 14}, "action": {"kind": "produce", "target": "SupplyDepot"}},
+        ],
+        "composition_targets": {"early": {"Marine": 1.0}, "mid": {"Marine": 1.0}, "late": {"Marine": 1.0}},
+        "macro_rules": {
+            "worker_cap": 22, "gas_workers_per_geyser": 3,
+            "supply_buffer_pct": 0.15, "max_bases": 3,
+        },
+    }
+    yaml_text = compile_to_ares_yaml({"TvZ": pb_tvz, "TvP": pb_tvp}, bot_race="Terran")
+    parsed = yaml.safe_load(yaml_text)
+
+    # vs Zerg -> TvZ; vs Protoss -> TvP; Terran/Random fall back to first available.
+    assert parsed["BuildChoices"]["Zerg"]["Cycle"] == ["TvZ"]
+    assert parsed["BuildChoices"]["Protoss"]["Cycle"] == ["TvP"]
+    # Terran has no exact match but falls back rather than being missing.
+    assert "Terran" in parsed["BuildChoices"]
+    assert "Random" in parsed["BuildChoices"]
 
 
 def test_compile_tvz_opening_contains_expected_steps():
@@ -169,8 +203,10 @@ def test_compile_unresolved_event_emits_skip_comment():
         },
     }
     build = compile_one_playbook(pb, race="Terran")
-    opening = build["OpeningBuildOrder"]
-    assert any(line.startswith("# SKIPPED") for line in opening)
+    # Skipped steps live on `notes`, not in OpeningBuildOrder, because
+    # comment-style strings break ares's BuildRunner parser.
+    assert all(not line.startswith("#") for line in build["OpeningBuildOrder"])
+    assert any("SKIPPED" in n and "nonexistent_complete" in n for n in build.get("notes", []))
 
 
 def test_compile_time_trigger_emits_skip_comment():
@@ -190,16 +226,20 @@ def test_compile_time_trigger_emits_skip_comment():
         },
     }
     build = compile_one_playbook(pb, race="Terran")
-    opening = build["OpeningBuildOrder"]
-    assert any("time trigger" in line.lower() for line in opening)
+    assert all(not line.startswith("#") for line in build["OpeningBuildOrder"])
+    assert any("time trigger" in n.lower() for n in build.get("notes", []))
 
 
-def test_compile_skip_if_emits_comment_above_step():
+def test_compile_skip_if_recorded_in_notes_not_in_opening():
+    """ares parses every list item in OpeningBuildOrder as a command and
+    silently breaks on comment-style strings, so conditional notes must
+    NOT appear inline. They belong on the sibling `notes` key."""
     pb = _load(PLAYBOOK_DIR / "tvz.json")
     build = compile_one_playbook(pb)
     opening = build["OpeningBuildOrder"]
-    # The 36 marine x4 step has skip_if=ling_flood; its line should be
-    # preceded by a NOTE comment.
-    idx = next(i for i, line in enumerate(opening) if line.endswith("36 marine x4"))
-    assert opening[idx - 1].startswith("# NOTE")
-    assert "ling_flood" in opening[idx - 1]
+    # Every item in opening should look like a real ares command.
+    for line in opening:
+        assert not line.startswith("#"), f"comment leaked into OpeningBuildOrder: {line!r}"
+    # The skip_if=ling_flood detail should still be captured somewhere.
+    assert any("ling_flood" in n for n in build.get("notes", [])), \
+        "expected ling_flood note in build['notes']"
